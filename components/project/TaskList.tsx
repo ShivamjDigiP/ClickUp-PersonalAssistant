@@ -77,7 +77,7 @@ export function TaskList({
           return (
             <motion.li
               key={t.id}
-              className="grid gap-x-3 gap-y-1.5 px-3 py-3 text-sm hover:bg-[rgb(var(--tint)/0.04)] md:grid-cols-[minmax(0,1fr)_130px_170px_90px_80px_90px] md:items-center"
+              className="grid gap-x-3 gap-y-1 px-2 py-2.5 text-sm sm:px-3 sm:py-3 hover:bg-[rgb(var(--tint)/0.04)] md:grid-cols-[minmax(0,1fr)_130px_170px_90px_80px_90px] md:items-center"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.012, 0.25) }}

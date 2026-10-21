@@ -33,7 +33,7 @@ function Card({ title, hint, children, className = "", flush = false }: { title:
   // flush: the content (a table) runs edge to edge, so only the header gets padding
   return (
     <section className={`glass ${flush ? "pb-4" : "p-4 sm:p-5"} ${className}`}>
-      <div className={`mb-4 flex items-baseline justify-between gap-3 ${flush ? "px-5 pt-5" : ""}`}>
+      <div className={`mb-3 flex items-baseline justify-between gap-3 sm:mb-4 ${flush ? "px-4 pt-4 sm:px-5 sm:pt-5" : ""}`}>
         <h2 className="text-[11px] uppercase tracking-widest text-[var(--muted)]">{title}</h2>
         {hint && <span className="text-[11px] text-[var(--muted)]">{hint}</span>}
       </div>

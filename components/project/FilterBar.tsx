@@ -116,13 +116,13 @@ export function FilterBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <input
           value={filters.q}
           onChange={(e) => set({ q: e.target.value })}
           placeholder="Search tasks, status, people…"
           aria-label="Search tasks"
-          className="glass h-9 w-56 rounded-full pl-4 pr-8 text-sm outline-none placeholder:text-[var(--muted)] focus:border-[var(--violet)]"
+          className="glass h-9 w-full rounded-full pl-4 pr-8 text-sm sm:w-56 outline-none placeholder:text-[var(--muted)] focus:border-[var(--violet)]"
         />
         {filters.q && (
           <button aria-label="Clear search" onClick={() => set({ q: "" })} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--fg)]">
