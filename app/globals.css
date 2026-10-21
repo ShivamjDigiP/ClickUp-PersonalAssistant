@@ -1,26 +1,230 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #060a18;
+  --fg: #e8ecff;
+  --muted: #8b93b8;
+  --teal: #34d6b0;
+  --amber: #ffb547;
+  --coral: #ff6b81;
+  --violet: #8b7bff;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(160, 175, 255, 0.16);
+  --tint: 255 255 255; /* used as rgb(var(--tint)/α) for surfaces & hairlines; flips in light theme */
+  --overlay: rgba(4, 6, 15, 0.82);
+  --g1: rgba(95, 80, 255, 0.22);
+  --g2: rgba(40, 200, 170, 0.14);
+  --shadow: none;
+  color-scheme: dark;
+}
+
+/* Read-only mode = light theme (as in the design) */
+:root[data-theme="light"] {
+  --bg: #f4f6fd;
+  --fg: #171b3a;
+  --muted: #5a6290;
+  --teal: #0c9f7c;
+  --amber: #cf7f0a;
+  --coral: #dc3d5a;
+  --violet: #5b48e0;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(90, 100, 180, 0.2);
+  --tint: 30 36 90;
+  --overlay: rgba(238, 241, 252, 0.85);
+  --g1: rgba(150, 140, 255, 0.22);
+  --g2: rgba(120, 220, 210, 0.2);
+  --shadow: 0 10px 34px rgba(70, 80, 160, 0.1);
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image: radial-gradient(1200px 600px at 20% -10%, var(--g1), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, var(--g2), transparent 60%);
+  background-attachment: fixed;
+}
+/* Scrolling, everywhere: slim themed scrollbars, no scroll-chaining into the page behind,
+   no layout shift when a scrollbar appears, and gentle smooth scrolling. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--tint) / 0.28) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--tint) / 0.24);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--tint) / 0.45);
+  background-clip: content-box;
+}
+.overflow-y-auto {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+html {
+  scroll-behavior: smooth;
+}
+/* Lists that scroll inside a popover fade at the edges so it's clear there is more */
+.scroll-fade {
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%);
+}
+
+html,
+body,
+.glass {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+
+/* Glass surface with a spotlight that follows the pointer (--mx/--my set in Shell).
+   Lives in the components layer so Tailwind utilities (absolute, rounded-full, …) can override it. */
+@layer components {
+  .glass {
+    position: relative;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px) saturate(140%);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(150, 170, 255, 0.16), transparent 70%);
+  }
+  .glass:hover::after {
+    opacity: 1;
+  }
+  /* quiet pill used for chips and filters */
+  .chip {
+    border-radius: 9999px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    padding: 0.4rem 0.9rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+  }
+  .chip:hover,
+  .chip[aria-pressed="true"] {
+    color: var(--fg);
+    border-color: rgb(var(--tint) / 0.35);
+  }
+  .chip[aria-pressed="true"] {
+    background: rgb(var(--tint) / 0.1);
+  }
+}
+
+/* The orb: a lit sphere built from layered gradients */
+.orb {
+  position: relative;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 28%, #fff 0%, rgba(255, 255, 255, 0) 22%),
+    radial-gradient(circle at 70% 75%, rgba(255, 140, 200, 0.85), transparent 55%),
+    radial-gradient(circle at 25% 70%, rgba(52, 214, 176, 0.85), transparent 55%),
+    radial-gradient(circle at 60% 30%, rgba(139, 123, 255, 0.95), rgba(70, 60, 200, 0.9) 70%);
+  box-shadow: 0 0 60px rgba(139, 123, 255, 0.45), inset 0 0 30px rgba(255, 255, 255, 0.25);
+  animation: orb-spin 14s linear infinite;
+}
+@keyframes orb-spin {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.wave {
+  animation: wave-drift 18s linear infinite;
+}
+@keyframes wave-drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.frost {
+  backdrop-filter: blur(1.5px);
+}
+
+/* ---- Phones & touch ---- */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  overflow-x: hidden; /* nothing may push the page sideways */
+}
+/* iOS zooms the page when a field under 16px gets focus; keep fields at 16px on phones */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+/* Bigger tap targets for fingers (about 40px) */
+@media (pointer: coarse) {
+  .chip {
+    min-height: 40px;
+    padding-inline: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  button,
+  [role="button"] {
+    touch-action: manipulation; /* no 300ms double-tap delay */
+  }
+}
+/* Press-and-hold buttons must not open the long-press menu or select text */
+.hold-safe {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+/* Installed app (standalone): no accidental text selection chrome, calmer overscroll */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
