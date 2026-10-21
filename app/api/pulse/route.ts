@@ -30,6 +30,9 @@ export type PulseData = {
 const OTHERS_SHOWN = 8; // besides my projects, this many of the busiest other lists get live health
 let cache: { at: number; data: PulseData } | null = null;
 
+// Reading many projects from ClickUp can take longer than a host's default function limit (e.g. Vercel's 10s).
+export const maxDuration = 60;
+
 export async function GET() {
   await connection();
   if (cache && Date.now() - cache.at < 60_000) return Response.json(cache.data);

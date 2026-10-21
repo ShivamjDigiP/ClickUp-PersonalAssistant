@@ -3,6 +3,8 @@ import { clickup } from "@/lib/clickup/client";
 import { slimTask } from "@/lib/clickup/data";
 
 // Read-only: the user's open tasks for the check-in deck, most urgent first.
+export const maxDuration = 30;
+
 export async function GET() {
   await connection();
   try {

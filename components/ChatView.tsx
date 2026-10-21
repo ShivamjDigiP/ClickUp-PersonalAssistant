@@ -298,7 +298,7 @@ export function ChatView({
             {empty ? (
               <div className="flex min-h-full flex-col items-center justify-center gap-2 text-center sm:flex-row sm:gap-6 sm:text-left">
                 {/* a little smaller on phones so the greeting fits above the keyboard-sized controls */}
-                <div className="-my-5 origin-center scale-[0.72] sm:my-0 sm:scale-100">
+                <div className="-my-5 origin-center scale-[0.72] sm:my-0 sm:scale-100 [@media(max-height:720px)]:hidden">
                   <Orb
                     size={150}
                     thinking={busy}
@@ -374,12 +374,12 @@ export function ChatView({
 
           {/* Phone: one swipeable row of suggestions (saves height). Desktop: a 4-column grid. */}
           {empty && (
-            <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-4 no-scrollbar">
+            <div className="grid grid-cols-2 gap-2 pb-2 sm:grid-cols-4 sm:pb-4">
               {suggestions.map((s) => (
                 <button
                   key={s.label}
                   onClick={() => (s.checkIn ? onCheckIn() : submit(s.prompt!))}
-                  className="glass min-h-14 w-[15rem] shrink-0 snap-start px-3 py-3 text-left text-xs text-[var(--muted)] hover:text-[var(--fg)] sm:w-auto sm:shrink"
+                  className="glass min-h-12 px-3 py-2 text-left text-[11px] leading-snug text-[var(--muted)] hover:text-[var(--fg)] sm:py-3 sm:text-xs"
                 >
                   {s.label}
                 </button>
@@ -413,7 +413,8 @@ export function ChatView({
             </button>
           </form>
 
-          <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-3 pt-3 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-4 [&>button]:shrink-0 no-scrollbar">
+          {/* wraps instead of scrolling sideways; on phones only the check-in chip stays (the rest duplicate the suggestions) */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pb-2 pt-1 sm:pb-4 sm:pt-3">
             <button onClick={onCheckIn} className="chip">
               Daily check-in
             </button>
@@ -421,7 +422,7 @@ export function ChatView({
               <button
                 key={q.label}
                 onClick={() => submit(q.prompt)}
-                className="chip"
+                className="chip hidden sm:inline-flex"
               >
                 {q.label}
               </button>

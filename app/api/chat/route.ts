@@ -27,6 +27,8 @@ ${digest}`
     : ""
 }`;
 
+export const maxDuration = 60; // an answer can need several model + ClickUp round trips
+
 export async function POST(req: Request) {
   const { history, sessionId } = (await req.json()) as { history: Message[]; sessionId?: string };
   const { readOnly } = await getSettings(); // enforced server-side, not trusted from the browser

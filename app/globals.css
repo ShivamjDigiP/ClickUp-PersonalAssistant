@@ -191,8 +191,8 @@ body {
 /* Bigger tap targets for fingers (about 40px) */
 @media (pointer: coarse) {
   .chip {
-    min-height: 40px;
-    padding-inline: 1rem;
+    min-height: 36px;
+    padding-inline: 0.85rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;

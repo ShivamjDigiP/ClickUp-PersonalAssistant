@@ -16,6 +16,8 @@ const MAX_PAGES = 10; // up to 1000 tasks
 const cache = new Map<string, { at: number; data: ProjectTasks }>();
 
 // Read-only: every task of one project, slimmed down so the browser can filter and chart it instantly.
+export const maxDuration = 60; // big projects load up to 1000 tasks
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;

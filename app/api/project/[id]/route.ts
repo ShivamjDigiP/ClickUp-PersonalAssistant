@@ -2,6 +2,8 @@ import { connection } from "next/server";
 import { summarizeList } from "@/lib/clickup/data";
 
 // Read-only detail for one project (list), used by the expanding project page.
+export const maxDuration = 60;
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
