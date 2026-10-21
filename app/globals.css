@@ -101,6 +101,7 @@ body,
    Lives in the components layer so Tailwind utilities (absolute, rounded-full, …) can override it. */
 @layer components {
   .glass {
+    min-width: 0; /* grid/flex cells may shrink below their content instead of pushing the page wider */
     position: relative;
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -200,6 +201,13 @@ body {
   [role="button"] {
     touch-action: manipulation; /* no 300ms double-tap delay */
   }
+}
+/* Swipeable rows: no visible scrollbar */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 /* Press-and-hold buttons must not open the long-press menu or select text */
 .hold-safe {

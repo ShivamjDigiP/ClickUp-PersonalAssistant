@@ -34,10 +34,10 @@ export function Kpi({
   hint?: string;
 }) {
   return (
-    <motion.div className="glass p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} title={hint}>
-      <p className="text-[11px] uppercase tracking-widest text-[var(--muted)]">{label}</p>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-4xl font-light tabular-nums" style={{ color: accent }}>
+    <motion.div className="glass p-3 sm:p-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} title={hint}>
+      <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] sm:text-[11px]">{label}</p>
+      <div className="mt-1 flex items-baseline gap-2 sm:mt-2">
+        <span className="text-3xl font-light tabular-nums sm:text-4xl" style={{ color: accent }}>
           {value === null ? "–" : <CountUp value={value} decimals={decimals} />}
           {value !== null && suffix && <span className="ml-0.5 text-xl text-[var(--muted)]">{suffix}</span>}
         </span>

@@ -42,7 +42,7 @@ export function ActivityView({ readOnly }: { readOnly: boolean }) {
   const groups = shown.reduce<Record<string, Entry[]>>((acc, e) => ((acc[dayLabel(e.at)] ??= []).push(e), acc), {});
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-2xl px-4 py-4 sm:px-6 sm:py-8">
       <h2 className="text-3xl font-light tracking-tight">Activity</h2>
       <p className="mt-1 text-sm text-[var(--muted)]">Every proposal, approval and change, in order.</p>
 
@@ -74,11 +74,11 @@ export function ActivityView({ readOnly }: { readOnly: boolean }) {
         </div>
       )}
 
-      <div className="mt-8">
+      <div className="mt-5 sm:mt-8">
         {Object.entries(groups).map(([day, list]) => (
           <section key={day} className="mb-8">
             <h3 className="mb-4 text-xs uppercase tracking-widest text-[var(--muted)]">{day}</h3>
-            <ol className="relative space-y-5 border-l border-[rgb(var(--tint)/0.12)] pl-7">
+            <ol className="relative space-y-3.5 border-l sm:space-y-5 border-[rgb(var(--tint)/0.12)] pl-7">
               {list.map((e, i) => {
                 const s = STYLE[e.event] ?? STYLE.expired;
                 return (

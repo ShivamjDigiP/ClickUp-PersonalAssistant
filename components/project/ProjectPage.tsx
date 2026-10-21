@@ -32,7 +32,7 @@ const HEALTH = { on_track: ["var(--teal)", "On track"], at_risk: ["var(--amber)"
 function Card({ title, hint, children, className = "", flush = false }: { title: string; hint?: string; children: React.ReactNode; className?: string; flush?: boolean }) {
   // flush: the content (a table) runs edge to edge, so only the header gets padding
   return (
-    <section className={`glass ${flush ? "pb-4" : "p-5"} ${className}`}>
+    <section className={`glass ${flush ? "pb-4" : "p-4 sm:p-5"} ${className}`}>
       <div className={`mb-4 flex items-baseline justify-between gap-3 ${flush ? "px-5 pt-5" : ""}`}>
         <h2 className="text-[11px] uppercase tracking-widest text-[var(--muted)]">{title}</h2>
         {hint && <span className="text-[11px] text-[var(--muted)]">{hint}</span>}
@@ -199,7 +199,7 @@ export function ProjectPage({
   const reach = useMemo(() => (typeof window === "undefined" ? 2000 : Math.hypot(window.innerWidth, window.innerHeight) + 40), []);
 
   const body = (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8">
+    <div className="mx-auto max-w-6xl px-4 pb-8 pt-3 sm:px-8 sm:pb-16 sm:pt-6">
       <div className="flex items-center justify-between gap-3">
         {mode === "overlay" ? (
           <button onClick={onClose} className="glass rounded-full px-4 py-2 text-sm">
@@ -225,8 +225,8 @@ export function ProjectPage({
       </div>
 
       {/* title + progress ring (follows the filters) */}
-      <motion.header className="mt-7 flex flex-wrap items-center gap-6" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        <div className="relative h-28 w-28 shrink-0">
+      <motion.header className="mt-4 flex items-center gap-4 sm:mt-7 sm:gap-6" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <div className="relative h-20 w-20 shrink-0 sm:h-28 sm:w-28">
           <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
             <circle cx="60" cy="60" r="52" fill="none" stroke="rgb(var(--tint)/0.1)" strokeWidth="8" />
             <motion.circle
@@ -243,11 +243,11 @@ export function ProjectPage({
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </svg>
-          <div className="absolute inset-0 grid place-items-center text-2xl font-light">{data ? `${progress}%` : "…"}</div>
+          <div className="absolute inset-0 grid place-items-center text-lg font-light sm:text-2xl">{data ? `${progress}%` : "…"}</div>
         </div>
         <div className="min-w-0">
           {crumb && <p className="text-xs uppercase tracking-widest text-[var(--muted)]">{crumb}</p>}
-          <h1 className="truncate text-4xl font-light tracking-tight">{project?.name ?? name}</h1>
+          <h1 className="text-2xl font-light leading-tight tracking-tight sm:truncate sm:text-4xl">{project?.name ?? name}</h1>
           {data && (
             <p className="mt-2 flex flex-wrap items-center gap-x-3 text-sm" style={{ color: hColor }}>
               <span className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export function ProjectPage({
       {data && (
         <>
           {/* filters stay in view while you scroll */}
-          <div className="sticky top-0 z-20 -mx-4 mt-6 border-b border-[rgb(var(--tint)/0.08)] px-4 py-3 backdrop-blur-md sm:-mx-8 sm:px-8" style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
+          <div className="z-20 -mx-4 mt-4 border-b border-[rgb(var(--tint)/0.08)] px-4 py-2 backdrop-blur-md sm:-mx-8 sm:mt-6 sm:px-8 sm:py-3 md:sticky md:top-0" style={{ background: "color-mix(in srgb, var(--bg) 82%, transparent)" }}>
             <FilterBar
               filters={filters}
               set={set}
@@ -302,7 +302,7 @@ export function ProjectPage({
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-4">
             <Kpi label={nActive ? "Matching tasks" : "Tasks"} value={filtered.length} sub={nActive ? `of ${total} in the project` : `${fOpen} open · ${fDone} done`} accent="var(--violet)" />
             <Kpi label="Open" value={fOpen} sub={nActive ? "in this view" : "not done yet"} accent="var(--amber)" />
             <Kpi label="Done" value={fDone} sub={filtered.length ? `${progress}% of this view` : "–"} accent="var(--teal)" />
@@ -315,7 +315,7 @@ export function ProjectPage({
             </div>
           )}
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-5 sm:gap-5 lg:grid-cols-2">
             <Card title="By status" hint="click to filter">
               <StatusFacet items={facets.statuses} selected={filters.statuses} onToggle={(s) => set({ statuses: toggle(filters.statuses, s) })} />
             </Card>
@@ -327,7 +327,7 @@ export function ProjectPage({
             </Card>
           </div>
 
-          <Card title={nActive ? `Tasks · ${sorted.length} match` : `Tasks · ${total}`} hint={data.truncated ? "showing the first 1000 tasks" : undefined} className="mt-5" flush>
+          <Card title={nActive ? `Tasks · ${sorted.length} match` : `Tasks · ${total}`} hint={data.truncated ? "showing the first 1000 tasks" : undefined} className="mt-3 sm:mt-5" flush>
             <div className="px-2 sm:px-3">
               <TaskList
                 tasks={sorted}
@@ -362,7 +362,7 @@ export function ProjectPage({
       <motion.div
         role="dialog"
         aria-label={`${name} details`}
-        className="fixed inset-0 z-40 overflow-y-auto"
+        className="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden"
         style={{
           background: "var(--bg)",
           backgroundImage: `radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, ${color} 20%, transparent), transparent 60%), radial-gradient(900px 500px at 100% 110%, var(--g1), transparent 60%)`,

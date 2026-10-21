@@ -192,7 +192,7 @@ export function Shell() {
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
-            className="h-full overflow-y-auto"
+            className="h-full overflow-y-auto overflow-x-hidden"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}

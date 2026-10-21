@@ -124,9 +124,9 @@ export function PulseView({
   return (
     <div className="relative h-full overflow-y-auto md:overflow-hidden">
       <Mountains />
-      <div className="relative mx-auto grid min-h-full max-w-7xl gap-8 px-4 pb-4 pt-4 sm:px-8 md:h-full md:grid-cols-[5fr_7fr] md:items-center md:pb-24 md:pt-6">
+      <div className="relative mx-auto grid min-h-full max-w-7xl grid-cols-1 gap-4 px-4 pb-3 pt-2 sm:gap-8 sm:px-8 md:h-full md:grid-cols-[5fr_7fr] md:items-center md:pb-24 md:pt-6">
         <div>
-          <h2 className="text-5xl font-extralight leading-[1.08] tracking-tight lg:text-6xl">
+          <h2 className="text-4xl font-extralight leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
             Your work
             <br />
             in one pulse.
@@ -136,7 +136,7 @@ export function PulseView({
           </p>
 
           {pulse && pulse.counts.mine > 0 && (
-            <div className="mt-7 inline-flex gap-1 rounded-full border border-[var(--glass-border)] bg-[var(--glass)] p-1 text-sm" role="group" aria-label="Which projects to show">
+            <div className="mt-4 inline-flex gap-1 sm:mt-7 rounded-full border border-[var(--glass-border)] bg-[var(--glass)] p-1 text-sm" role="group" aria-label="Which projects to show">
               {(
                 [
                   { id: "mine", label: "My projects", n: pulse.counts.mine },

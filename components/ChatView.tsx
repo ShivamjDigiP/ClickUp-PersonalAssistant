@@ -296,19 +296,22 @@ export function ChatView({
             className="-mx-4 flex-1 overflow-y-auto px-4 py-6"
           >
             {empty ? (
-              <div className="flex min-h-full flex-col items-center justify-center gap-6 text-center sm:flex-row sm:text-left">
-                <Orb
-                  size={150}
-                  thinking={busy}
-                  pulseKey={pulseKey}
-                  three
-                  light={light}
-                />
+              <div className="flex min-h-full flex-col items-center justify-center gap-2 text-center sm:flex-row sm:gap-6 sm:text-left">
+                {/* a little smaller on phones so the greeting fits above the keyboard-sized controls */}
+                <div className="-my-5 origin-center scale-[0.72] sm:my-0 sm:scale-100">
+                  <Orb
+                    size={150}
+                    thinking={busy}
+                    pulseKey={pulseKey}
+                    three
+                    light={light}
+                  />
+                </div>
                 <div>
-                  <h2 className="text-3xl font-light">
+                  <h2 className="text-2xl font-light sm:text-3xl">
                     {greeting()}, {name}.
                   </h2>
-                  <p className="text-2xl font-light text-[var(--muted)]">
+                  <p className="text-lg font-light text-[var(--muted)] sm:text-2xl">
                     What would you like to work on?
                   </p>
                 </div>
@@ -369,13 +372,14 @@ export function ChatView({
             </button>
           )}
 
+          {/* Phone: one swipeable row of suggestions (saves height). Desktop: a 4-column grid. */}
           {empty && (
-            <div className="grid grid-cols-2 gap-2 pb-4 sm:grid-cols-4">
+            <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-4 no-scrollbar">
               {suggestions.map((s) => (
                 <button
                   key={s.label}
                   onClick={() => (s.checkIn ? onCheckIn() : submit(s.prompt!))}
-                  className="glass px-3 py-3 text-left text-xs text-[var(--muted)] hover:text-[var(--fg)]"
+                  className="glass min-h-14 w-[15rem] shrink-0 snap-start px-3 py-3 text-left text-xs text-[var(--muted)] hover:text-[var(--fg)] sm:w-auto sm:shrink"
                 >
                   {s.label}
                 </button>
@@ -395,7 +399,7 @@ export function ChatView({
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything about your ClickUp workspace…"
+              placeholder="Ask about your ClickUp work…"
             />
             <kbd className="hidden rounded-md border border-[rgb(var(--tint)/0.15)] px-2 py-1 text-[10px] text-[var(--muted)] sm:block">
               ⌘ K
@@ -409,7 +413,7 @@ export function ChatView({
             </button>
           </form>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 pb-4 pt-3">
+          <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-3 pt-3 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-4 [&>button]:shrink-0 no-scrollbar">
             <button onClick={onCheckIn} className="chip">
               Daily check-in
             </button>

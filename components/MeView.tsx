@@ -12,7 +12,7 @@ const PRIORITY_COLOR: Record<string, string> = { urgent: "var(--coral)", high: "
 
 function Section({ title, hint, children, className = "" }: { title: string; hint?: string; children: React.ReactNode; className?: string }) {
   return (
-    <motion.section className={`glass p-5 ${className}`} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
+    <motion.section className={`glass p-4 sm:p-5 ${className}`} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h3 className="text-[11px] uppercase tracking-widest text-[var(--muted)]">{title}</h3>
         {hint && <span className="text-[11px] text-[var(--muted)]">{hint}</span>}
@@ -87,7 +87,7 @@ export function MeView({
     .filter((d) => d.value > 0);
 
   return (
-    <div className={`mx-auto max-w-6xl space-y-5 px-4 py-8 transition-opacity sm:px-8 ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
+    <div className={`mx-auto max-w-6xl space-y-3 px-4 py-4 transition-opacity sm:space-y-5 sm:px-8 sm:py-8 ${loading ? "opacity-60" : ""}`} aria-busy={loading}>
       {/* identity + period */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ export function MeView({
       </header>
 
       {/* headline numbers */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Kpi
           label="My projects"
           value={data.projectCount}
@@ -150,7 +150,7 @@ export function MeView({
       </div>
 
       {/* where I work + what stands out */}
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-5">
         <Section title="Where I work" hint={`${data.projectCount} project${data.projectCount === 1 ? "" : "s"} · where you have tasks`} className="lg:col-span-3">
           <WhereIWork data={data} projects={projects} onSelect={onSelect} />
         </Section>
@@ -173,7 +173,7 @@ export function MeView({
         </Section>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-5">
         {/* where my work stands */}
         <Section title="Where my work stands" hint={`${totals.completionRate}% of all my tasks are done`} className="lg:col-span-3">
           <StageBar backlog={stages.backlog} inProgress={stages.inProgress} done={stages.done} />
@@ -232,7 +232,7 @@ export function MeView({
       </div>
 
       {/* impact over time */}
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-5">
         <Section title="Output, last 8 weeks" hint="completed vs created" className="lg:col-span-3">
           <ColumnChart
             data={data.weekly.map((w) => ({ label: weekLabel(w.start), value: w.completed, value2: w.created }))}
@@ -255,7 +255,7 @@ export function MeView({
         </Section>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-5 lg:grid-cols-5">
         <Section title="What I delivered" hint={`last ${data.days} days`} className="lg:col-span-2">
           {mixData.length ? <Bars data={mixData} /> : <p className="text-sm text-[var(--muted)]">No completed tasks in this period.</p>}
           <p className="mt-4 text-xs text-[var(--muted)]">Completed tasks by priority.</p>
