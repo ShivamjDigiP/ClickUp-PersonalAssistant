@@ -33,10 +33,7 @@ const withSignatures = (model: string, contents: Message[]): Message[] =>
       }))
     : contents;
 
-export async function generateGemini(model: string, system: string, contents: Message[], tools: Tool[]): Promise<Message> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new ProviderError("GEMINI_API_KEY is not set", 0, Infinity);
-
+export async function generateGemini(key: string, model: string, system: string, contents: Message[], tools: Tool[]): Promise<Message> {
   const payload = JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: withSignatures(model, contents),

@@ -1,7 +1,8 @@
 import { resolve } from "@/lib/approval/gate";
 import { runWriteTool } from "@/lib/approval/execute";
-import { audit, getSettings } from "@/lib/store";
+import { audit } from "@/lib/store";
 import { withAuth } from "@/lib/auth/guard";
+import { isLocalRequest } from "@/lib/connections/local";
 
 export const maxDuration = 60;
 
@@ -10,8 +11,8 @@ async function handler(req: Request) {
   if (decision !== "approve" && decision !== "reject") {
     return Response.json({ ok: false, error: "Bad decision" }, { status: 400 });
   }
-  const { readOnly } = await getSettings(); // checked again at execution time
-  const outcome = await resolve(id, decision, { readOnly, run: runWriteTool, audit });
+  const local = isLocalRequest(req);
+  const outcome = await resolve(id, decision, { run: (tool, args) => runWriteTool(tool, args, local), audit });
   return Response.json(outcome);
 }
 

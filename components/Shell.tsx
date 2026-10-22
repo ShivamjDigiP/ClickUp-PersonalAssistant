@@ -7,11 +7,11 @@ import { PulseView } from "./PulseView";
 import { ChatView } from "./ChatView";
 import { ActivityView } from "./ActivityView";
 import { MeView } from "./MeView";
+import { ConnectionsView } from "./ConnectionsView";
 import { CheckInDeck } from "./CheckInDeck";
 import { ProjectPage, type Origin } from "./project/ProjectPage";
 import { HEALTH_COLOR } from "@/lib/health";
 import { ThemeMenu } from "./ThemeMenu";
-import { ReadOnlyToggle } from "./ReadOnlyToggle";
 import { useChat } from "./useChat";
 import { BottomNav } from "./BottomNav";
 import { THEME_SWITCHING, useThemePref } from "./useTheme";
@@ -19,25 +19,23 @@ import { useInstallPrompt } from "./usePwa";
 import type { Project, PulseData } from "@/app/api/pulse/route";
 
 const TABS = [
-  { id: "pulse", label: "Pulse" },
+  { id: "pulse", label: "Home" },
   { id: "chat", label: "Chat" },
   { id: "me", label: "Me" },
   { id: "activity", label: "Activity" },
+  { id: "connections", label: "Configs" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
 export function Shell() {
   const [tab, setTab] = useState<Tab>("pulse");
-  const [readOnly, setReadOnly] = useState(true);
   const [name, setName] = useState("there");
-  const [sweep, setSweep] = useState(0);
   const [checkIn, setCheckIn] = useState(false);
   const [selected, setSelected] = useState<{ project: Project; origin: Origin } | null>(null);
   const pushed = useRef(false); // did opening the project add a browser history entry?
   const [pulse, setPulse] = useState<PulseData | null>(null);
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [themePref, setThemePref] = useThemePref();
-  const [toast, setToast] = useState<{ id: number; text: string; tone: "info" | "warn" | "error" } | null>(null);
   const chat = useChat();
   const { canInstall, install } = useInstallPrompt();
 
@@ -45,7 +43,6 @@ export function Shell() {
     fetch("/api/settings")
       .then((r) => r.json())
       .then((s) => {
-        setReadOnly(s.readOnly);
         if (s.name) setName(s.name);
       });
     // Loaded once and shared: Pulse draws it, Chat uses it for smart suggestions
@@ -63,40 +60,11 @@ export function Shell() {
     return () => clearTimeout(id);
   }, []);
 
-  // Dark-only while THEME_SWITCHING is off. When it is on: Auto = Read-only is light, Approval mode is dark; Light/Dark override it.
-  const theme: "light" | "dark" = !THEME_SWITCHING ? "dark" : themePref === "auto" ? (readOnly ? "light" : "dark") : themePref;
+  // Dark-only while THEME_SWITCHING is off. When it is on: Auto is dark; Light/Dark override it.
+  const theme: "light" | "dark" = !THEME_SWITCHING ? "dark" : themePref === "auto" ? "dark" : themePref;
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
-
-  const notify = (text: string, tone: "info" | "warn" | "error" = "info") => {
-    const id = Date.now();
-    setToast({ id, text, tone });
-    setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 3200);
-  };
-
-  // Two modes. Read-only: nothing can change. Approve & Act: the assistant may propose changes, each needs your approval.
-  async function toggle() {
-    const next = !readOnly;
-    try {
-      const res = await fetch("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ readOnly: next }),
-      });
-      // read the body defensively: a server crash can return an empty or non-JSON body
-      const s = await res.json().catch(() => ({}) as { readOnly?: boolean; error?: string });
-      if (!res.ok || typeof s.readOnly !== "boolean") throw new Error(s.error ?? `The server could not save this (HTTP ${res.status}).`);
-      setReadOnly(s.readOnly);
-      if (s.readOnly) notify("Read-only is on. Nothing can be changed.");
-      else {
-        setSweep((n) => n + 1); // warm amber light sweeps across when changes are enabled
-        notify("Approve & Act is on. The assistant can propose changes; each one needs your approval.", "warn");
-      }
-    } catch (e) {
-      notify(`Couldn't switch mode: ${(e as Error).message}`, "error");
-    }
-  }
 
   // A project opens at its own address (/imported-from-jira). Back/forward and the close button stay in sync.
   const openProject = (project: Project, x: number, y: number) => {
@@ -170,7 +138,6 @@ export function Shell() {
         </nav>
 
         <div className="flex items-center justify-end gap-2 sm:gap-3">
-          <ReadOnlyToggle readOnly={readOnly} onToggle={toggle} />
           {THEME_SWITCHING && <ThemeMenu pref={themePref} effective={theme} onChange={setThemePref} />}
           {canInstall && (
             <button
@@ -218,58 +185,15 @@ export function Shell() {
                 light={light}
               />
             )}
-            {tab === "chat" && <ChatView chat={chat} name={name} readOnly={readOnly} light={light} projects={focusProjects} onCheckIn={() => setCheckIn(true)} />}
+            {tab === "chat" && <ChatView chat={chat} name={name} light={light} projects={focusProjects} onCheckIn={() => setCheckIn(true)} />}
             {tab === "me" && <MeView projects={pulse?.projects ?? null} onAsk={ask} onSelect={openProject} />}
-            {tab === "activity" &&<ActivityView readOnly={light} />}
+            {tab === "activity" &&<ActivityView light={light} />}
+            {tab === "connections" && <ConnectionsView />}
           </motion.div>
         </AnimatePresence>
       </main>
 
       <BottomNav tabs={TABS} tab={tab} onChange={setTab} />
-
-      {/* Mode feedback: soft edge glow while read-only, amber sweep when writes turn on */}
-      <div
-        aria-hidden
-        className={`pointer-events-none fixed fill-screen z-30 transition-opacity duration-500 ${readOnly ? "opacity-100" : "opacity-0"}`}
-        style={{ boxShadow: "inset 0 0 90px rgba(130,150,255,.14)" }}
-      />
-      <AnimatePresence>
-        {sweep > 0 && (
-          <motion.div
-            key={sweep}
-            aria-hidden
-            className="pointer-events-none fixed inset-y-0 z-50 w-1/2"
-            style={{ background: "linear-gradient(90deg, transparent, rgba(255,181,71,.35), transparent)" }}
-            initial={{ left: "-50%", opacity: 1 }}
-            animate={{ left: "100%", opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: "easeInOut" }}
-            onAnimationComplete={() => setSweep(0)}
-          />
-        )}
-      </AnimatePresence>
-
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-20 z-[60] flex justify-center px-4">
-        <AnimatePresence>
-          {toast && (
-            <motion.div
-              key={toast.id}
-              role="status"
-              className="glass max-w-md px-5 py-3 text-center text-sm shadow-xl"
-              style={{
-                background: "var(--bg)",
-                borderColor: toast.tone === "error" ? "var(--coral)" : toast.tone === "warn" ? "var(--amber)" : "var(--violet)",
-              }}
-              initial={{ opacity: 0, y: -12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ type: "spring", stiffness: 400, damping: 26 }}
-            >
-              {toast.text}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       <AnimatePresence>
         {selected && (
@@ -285,7 +209,7 @@ export function Shell() {
           />
         )}
       </AnimatePresence>
-      <AnimatePresence>{checkIn && <CheckInDeck readOnly={readOnly} onClose={() => setCheckIn(false)} />}</AnimatePresence>
+      <AnimatePresence>{checkIn && <CheckInDeck onClose={() => setCheckIn(false)} />}</AnimatePresence>
     </div>
   );
 }

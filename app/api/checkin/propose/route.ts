@@ -1,7 +1,7 @@
 import { clickup } from "@/lib/clickup/client";
 import { tools } from "@/lib/clickup/tools";
 import { propose } from "@/lib/approval/gate";
-import { audit, getSettings } from "@/lib/store";
+import { audit } from "@/lib/store";
 import { withAuth } from "@/lib/auth/guard";
 
 // Turns a check-in swipe into a *proposal* (never executes). The user approves in the review step.
@@ -11,9 +11,6 @@ async function handler(req: Request) {
     action: "done" | "blocked" | "note";
     note?: string;
   };
-  if ((await getSettings()).readOnly) {
-    return Response.json({ error: "Read-only mode is on." }, { status: 403 });
-  }
 
   try {
     let toolName: "update_task" | "add_comment";

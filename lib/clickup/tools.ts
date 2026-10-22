@@ -3,6 +3,7 @@ import { clickup } from "./client";
 import { assignedTo, fetchListTasks, ms, slimTask, summarizeList } from "./data";
 import { defaultTeamId, loadHierarchy, resolveLists, resolveScope } from "./resolve";
 import { computeMe } from "./me";
+import { gitTools } from "../git/tools";
 
 // Every tool is tagged read | write. Write tools never run directly from the LLM:
 // they are validated (schema), previewed (preview) and queued in lib/approval/gate.ts.
@@ -14,6 +15,7 @@ export type Tool = {
   run: (args: any) => Promise<unknown>;
   schema?: z.ZodType<any>;
   preview?: (args: any) => Promise<{ summary: string; details?: string }>;
+  external?: boolean; // not a ClickUp tool (e.g. GitHub): never retried through the ClickUp MCP
 };
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "use YYYY-MM-DD");
@@ -284,4 +286,5 @@ export const tools: Tool[] = [
       return { ok: true };
     },
   },
+  ...gitTools,
 ];

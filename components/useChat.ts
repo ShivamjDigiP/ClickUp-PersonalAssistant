@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Chart } from "@/lib/charts";
+import type { AnswerMeta } from "@/lib/llm/engine";
+import type { SyncReport } from "@/lib/sync/types";
 
 export type Proposal = { id: string; tool: string; summary: string; details?: string };
 export type Bubble = {
@@ -9,6 +11,8 @@ export type Bubble = {
   text: string;
   proposals?: Proposal[];
   charts?: Chart[];
+  meta?: AnswerMeta; // which engine answered and which data sources it used
+  sync?: SyncReport;
   fresh?: boolean;
 };
 export type Outcome = { state: "working" | "approved" | "rejected" | "error"; message?: string };
@@ -142,7 +146,7 @@ export function useChat() {
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         history.current = data.history;
-        setBubbles((b) => [...b, { role: "assistant", text: data.text, proposals: data.proposals, charts: data.charts, fresh: true }]);
+        setBubbles((b) => [...b, { role: "assistant", text: data.text, proposals: data.proposals, charts: data.charts, meta: data.meta, fresh: true }]);
         setPulseKey((k) => k + 1);
       } catch (e) {
         history.current.pop();
@@ -154,6 +158,75 @@ export function useChat() {
     },
     [busy],
   );
+
+  // "Sync ClickUp and GitHub": PRs and tasks compared on the server, with AI reading changelogs for PRs that carry no task id; shown as a card with one-click proposals.
+  const sync = useCallback(
+    async (repos: string[], days: number, ai = true) => {
+      if (busy) return;
+      setBusy(true);
+      const label = `Sync ClickUp and GitHub (${repos.length ? repos.join(", ") : "all my repos"}, last ${days} days)`;
+      setBubbles((b) => [...b.map((x) => ({ ...x, fresh: false })), { role: "user", text: label }]);
+      try {
+        const res = await fetch("/api/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repos, days, ai }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.error) throw new Error(data.error ?? `The sync failed (HTTP ${res.status}).`);
+        const r: SyncReport = data.report;
+        history.current.push({ role: "user", parts: [{ text: label }] }, { role: "model", parts: [{ text: data.digest }] });
+        const text = r.items.length
+          ? `Checked ${r.counts.prs} PRs against your ClickUp tasks: ${r.counts.status} need a status update, ${r.counts.prNoTask} PRs have no task, ${r.counts.taskNoPr} tasks have no PR.`
+          : `Checked ${r.counts.prs} PRs against your ClickUp tasks. Everything lines up.`;
+        const meta: AnswerMeta = { engines: r.ai?.engine ? [r.ai.engine] : [], fellBack: false, clickup: "api", github: true, tools: 0, ms: r.ms };
+        setBubbles((b) => [...b, { role: "assistant", text, sync: r, meta, fresh: true }]);
+        setPulseKey((k) => k + 1);
+      } catch (e) {
+        setBubbles((b) => [...b, { role: "assistant", text: `Error: ${(e as Error).message}` }]);
+      } finally {
+        dirty.current = true;
+        setBusy(false);
+      }
+    },
+    [busy],
+  );
+
+  const proposeSync = useCallback(async (reportId: string, itemIds: string[]) => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/sync/propose", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reportId, itemIds }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error ?? `Could not propose (HTTP ${res.status}).`);
+      const proposals: Proposal[] = data.proposals;
+      const text = proposals.length ? `I proposed ${proposals.length} change${proposals.length === 1 ? "" : "s"}. Nothing happens until you approve each one.` : "There was nothing to propose for those rows.";
+      history.current.push({ role: "user", parts: [{ text: "(System note: sync changes were proposed for approval.)" }] }, { role: "model", parts: [{ text }] });
+      setBubbles((b) => [...b.map((x) => ({ ...x, fresh: false })), { role: "assistant", text, proposals, fresh: true }]);
+    } catch (e) {
+      setBubbles((b) => [...b, { role: "assistant", text: `Error: ${(e as Error).message}` }]);
+    } finally {
+      dirty.current = true;
+      setBusy(false);
+    }
+  }, []);
+
+  // One short comment on a task, written by AI from the PRs the person ticked; it arrives as an Approve/Reject card.
+  const draftComment = useCallback(async (task: { id: string; name: string }, prs: { repo: string; number: number }[]) => {
+    setBusy(true);
+    const started = Date.now();
+    setBubbles((b) => [...b.map((x) => ({ ...x, fresh: false })), { role: "user", text: `Comment on "${task.name}" from ${prs.length} PR${prs.length === 1 ? "" : "s"}` }]);
+    try {
+      const res = await fetch("/api/pr-comments/draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, prs }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error ?? `Could not write the comment (HTTP ${res.status}).`);
+      const skipped: string[] = data.skipped ?? [];
+      const text = `I drafted a short comment for the task. Nothing is posted until you approve it.${skipped.length ? ` Skipped: ${skipped.join(", ")}.` : ""}`;
+      const meta: AnswerMeta = { engines: data.engine ? [data.engine] : [], fellBack: false, clickup: "api", github: true, tools: 0, ms: Date.now() - started };
+      history.current.push({ role: "user", parts: [{ text: `(System note: a comment on task "${task.name}" was drafted from PRs for approval.)` }] }, { role: "model", parts: [{ text }] });
+      setBubbles((b) => [...b, { role: "assistant", text, proposals: [data.proposal], meta, fresh: true }]);
+    } catch (e) {
+      setBubbles((b) => [...b, { role: "assistant", text: `Error: ${(e as Error).message}` }]);
+    } finally {
+      dirty.current = true;
+      setBusy(false);
+    }
+  }, []);
 
   const decide = useCallback(async (p: Proposal, decision: "approve" | "reject") => {
     setOutcomes((o) => ({ ...o, [p.id]: { state: "working" } }));
@@ -184,5 +257,5 @@ export function useChat() {
     if (out.ok) setPulseKey((k) => k + 1);
   }, []);
 
-  return { bubbles, busy, pulseKey, outcomes, send, decide, chats, chatId, openChat, newChat, removeChat, refreshChats };
+  return { bubbles, busy, pulseKey, outcomes, send, sync, proposeSync, draftComment, decide, chats, chatId, openChat, newChat, removeChat, refreshChats };
 }

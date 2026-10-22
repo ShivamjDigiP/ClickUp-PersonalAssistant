@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import type { ThemePref } from "./useTheme";
 
 const OPTIONS: { id: ThemePref; label: string; hint: string; icon: string }[] = [
-  { id: "auto", label: "Auto", hint: "Light in Read-only, dark in Approval mode", icon: "◐" },
+  { id: "auto", label: "Auto", hint: "Follows the app (dark)", icon: "◐" },
   { id: "light", label: "Light", hint: "Always light", icon: "☀" },
   { id: "dark", label: "Dark", hint: "Always dark", icon: "☾" },
 ];

@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 
-type Tab = "pulse" | "chat" | "me" | "activity";
+type Tab = "pulse" | "chat" | "me" | "activity" | "connections";
 
 const Icon = ({ id }: { id: Tab }) => {
   const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
@@ -32,6 +32,12 @@ const Icon = ({ id }: { id: Tab }) => {
       return (
         <svg {...common}>
           <path d="M3.5 12h4l2.5-6 4 12 2.5-6h4" />
+        </svg>
+      );
+    case "connections":
+      return (
+        <svg {...common}>
+          <path d="M9 4v4M15 4v4M7 8h10v3a5 5 0 0 1-10 0V8ZM12 16v4" />
         </svg>
       );
   }

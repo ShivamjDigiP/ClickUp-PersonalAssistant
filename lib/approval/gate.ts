@@ -4,7 +4,7 @@ import { kv } from "../kv";
 import { ns } from "../auth/context";
 
 // The approval gate. The LLM can only call propose(); nothing executes until
-// resolve(id, "approve") is called by the user-facing API, and never in read-only mode.
+// resolve(id, "approve") is called by the user-facing API,.
 // Pending proposals live in shared storage (not server memory) so approving works even when the
 // approve request lands on a different server instance than the one that created the proposal.
 export type Pending = {
@@ -26,7 +26,6 @@ export async function propose(tool: string, args: unknown, summary: string, deta
 }
 
 export type Deps = {
-  readOnly: boolean;
   run: (tool: string, args: unknown) => Promise<unknown>;
   audit: (e: Omit<AuditEntry, "at">) => Promise<void>;
   now?: () => number;
@@ -47,10 +46,6 @@ export async function resolve(id: string, decision: "approve" | "reject", deps: 
   if (decision === "reject") {
     await deps.audit({ event: "rejected", tool: p.tool, summary: p.summary });
     return { ok: false, error: "Rejected. Nothing was changed.", summary: p.summary };
-  }
-  if (deps.readOnly) {
-    await deps.audit({ event: "blocked", tool: p.tool, summary: p.summary, detail: "read-only mode" });
-    return { ok: false, error: "Read-only mode is on. Nothing was changed.", summary: p.summary };
   }
   if ((deps.now?.() ?? Date.now()) - p.createdAt > TTL_MS) {
     await deps.audit({ event: "expired", tool: p.tool, summary: p.summary });

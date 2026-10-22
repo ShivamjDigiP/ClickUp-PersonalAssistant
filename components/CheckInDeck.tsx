@@ -19,7 +19,7 @@ type Card = {
 
 const PRIORITY: Record<string, string> = { urgent: "var(--coral)", high: "var(--coral)", normal: "var(--amber)", low: "var(--teal)" };
 
-export function CheckInDeck({ readOnly, onClose }: { readOnly: boolean; onClose: () => void }) {
+export function CheckInDeck({ onClose }: { onClose: () => void }) {
   const [cards, setCards] = useState<Card[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [i, setI] = useState(0);
@@ -166,8 +166,7 @@ export function CheckInDeck({ readOnly, onClose }: { readOnly: boolean; onClose:
                   <button
                     key={b.k}
                     onClick={b.run}
-                    disabled={readOnly && b.write}
-                    className="group flex flex-col items-center gap-1 disabled:opacity-30"
+                    className="group flex flex-col items-center gap-1"
                   >
                     <motion.span
                       whileTap={{ scale: 0.85 }}
@@ -182,7 +181,6 @@ export function CheckInDeck({ readOnly, onClose }: { readOnly: boolean; onClose:
                 ))}
               </div>
             )}
-            {readOnly && <p className="mt-3 text-center text-[11px] text-[var(--muted)]">Read-only is on: you can look through your tasks, but not change them.</p>}
             {msg && <p className="mt-3 text-center text-xs text-[var(--coral)]">{msg}</p>}
           </>
         )}

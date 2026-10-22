@@ -23,7 +23,7 @@ const dayLabel = (iso: string) => {
   return diff === 0 ? "Today" : diff === 1 ? "Yesterday" : d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 };
 
-export function ActivityView({ readOnly }: { readOnly: boolean }) {
+export function ActivityView({ light }: { light: boolean }) {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [filter, setFilter] = useState("all");
 
@@ -64,7 +64,7 @@ export function ActivityView({ readOnly }: { readOnly: boolean }) {
 
       {entries && entries.length === 0 && (
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <Orb size={96} three light={readOnly} />
+          <Orb size={96} three light={light} />
           <div>
             <p className="text-lg font-light">Nothing here yet</p>
             <p className="mx-auto mt-1 max-w-sm text-sm text-[var(--muted)]">

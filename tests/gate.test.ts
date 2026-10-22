@@ -5,7 +5,6 @@ import { propose, resolve, TTL_MS } from "../lib/approval/gate";
 process.env.KV_BACKEND = "memory";
 
 const deps = (over: Partial<Parameters<typeof resolve>[2]> = {}) => ({
-  readOnly: false,
   run: vi.fn(async () => ({ done: true })),
   audit: vi.fn(async () => {}),
   ...over,
@@ -25,14 +24,6 @@ describe("approval gate", () => {
     const d = deps();
     const p = await propose("add_comment", {}, "Comment");
     const out = await resolve(p.id, "reject", d);
-    expect(out.ok).toBe(false);
-    expect(d.run).not.toHaveBeenCalled();
-  });
-
-  it("read-only mode blocks execution even after approve", async () => {
-    const d = deps({ readOnly: true });
-    const p = await propose("create_task", {}, "Create");
-    const out = await resolve(p.id, "approve", d);
     expect(out.ok).toBe(false);
     expect(d.run).not.toHaveBeenCalled();
   });

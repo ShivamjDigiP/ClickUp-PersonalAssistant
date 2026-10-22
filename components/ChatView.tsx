@@ -5,6 +5,10 @@ import { motion } from "motion/react";
 import { Orb } from "./Orb";
 import { ApprovalCard } from "./ApprovalCard";
 import { ChartCards } from "./Charts";
+import { SyncCard } from "./SyncCard";
+import { SyncDialog } from "./SyncDialog";
+import { PrCommentDialog } from "./PrCommentDialog";
+import { describeMeta } from "@/lib/llm/engine";
 import { byAttention, shortName } from "@/lib/health";
 import type { useChat } from "./useChat";
 import type { Project } from "@/app/api/pulse/route";
@@ -43,12 +47,6 @@ function suggestionsFor(projects: Project[] | null): Suggestion[] {
   ];
 }
 
-const QUICK = [
-  { label: "Progress", prompt: "Give me a progress overview of my projects" },
-  { label: "Blockers", prompt: "What is blocking my work right now?" },
-  { label: "Task updates", prompt: "Which of my tasks were updated recently?" },
-  { label: "Suggestions", prompt: "Suggest what I should focus on next" },
-];
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -94,9 +92,15 @@ const ago = (iso: string) => {
 function HistoryPanel({
   chat,
   onPicked,
+  onSync,
+  onComment,
+  onCheckIn,
 }: {
   chat: ReturnType<typeof useChat>;
   onPicked?: () => void;
+  onSync: () => void;
+  onComment: () => void;
+  onCheckIn: () => void;
 }) {
   const { chats, chatId, busy, bubbles, openChat, newChat, removeChat } = chat;
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -113,6 +117,26 @@ function HistoryPanel({
       >
         + New chat
       </button>
+      <div className="flex flex-col gap-2" role="group" aria-label="Actions">
+        {[
+          { label: "Sync ClickUp ↔ GitHub", run: onSync, accent: true },
+          { label: "Comment from PRs", run: onComment, accent: true },
+          { label: "Daily check-in", run: onCheckIn, accent: false },
+        ].map((a) => (
+          <button
+            key={a.label}
+            onClick={() => {
+              a.run();
+              onPicked?.();
+            }}
+            disabled={busy}
+            className="chip w-full justify-center disabled:opacity-40"
+            style={a.accent ? { background: "rgb(var(--tint) / 0.18)" } : undefined}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
       <p className="px-1 text-[11px] uppercase tracking-wider text-[var(--muted)]">
         History
       </p>
@@ -199,19 +223,19 @@ function Wave() {
 export function ChatView({
   chat,
   name,
-  readOnly,
   light,
   projects,
   onCheckIn,
 }: {
   chat: ReturnType<typeof useChat>;
   name: string;
-  readOnly: boolean;
   light: boolean;
   projects: Project[] | null;
   onCheckIn: () => void;
 }) {
-  const { bubbles, busy, pulseKey, outcomes, send, decide } = chat;
+  const { bubbles, busy, pulseKey, outcomes, send, decide, sync, proposeSync, draftComment } = chat;
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
   const suggestions = suggestionsFor(projects);
   const [input, setInput] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
@@ -264,7 +288,7 @@ export function ChatView({
     <div className="flex h-full w-full">
       {/* LEFT: chat history */}
       <aside className="hidden w-72 shrink-0 border-r border-[rgb(var(--tint)/0.1)] md:block">
-        <HistoryPanel chat={chat} />
+        <HistoryPanel chat={chat} onSync={() => setSyncOpen(true)} onComment={() => setCommentOpen(true)} onCheckIn={onCheckIn} />
       </aside>
       {drawer && (
         <div
@@ -276,7 +300,7 @@ export function ChatView({
             style={{ background: "var(--bg)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <HistoryPanel chat={chat} onPicked={() => setDrawer(false)} />
+            <HistoryPanel chat={chat} onPicked={() => setDrawer(false)} onSync={() => setSyncOpen(true)} onComment={() => setCommentOpen(true)} onCheckIn={onCheckIn} />
           </div>
         </div>
       )}
@@ -338,6 +362,7 @@ export function ChatView({
                         b.text
                       )}
                     </div>
+                    {b.sync && <SyncCard report={b.sync} busy={busy} onPropose={proposeSync} />}
                     {b.charts && b.charts.length > 0 && (
                       <ChartCards charts={b.charts} />
                     )}
@@ -349,6 +374,11 @@ export function ChatView({
                         onDecide={(d) => decide(p, d)}
                       />
                     ))}
+                    {b.role === "assistant" && b.meta && (
+                      <p className="pl-1 text-[11px] text-[var(--muted)]" title="Which engine wrote this answer and where the data came from">
+                        {describeMeta(b.meta)}
+                      </p>
+                    )}
                   </motion.div>
                 ))}
                 {busy && (
@@ -365,7 +395,7 @@ export function ChatView({
           {away && !empty && (
             <button
               onClick={toLatest}
-              className="chip absolute bottom-36 left-1/2 z-10 -translate-x-1/2 shadow-lg"
+              className="chip absolute bottom-24 left-1/2 z-10 -translate-x-1/2 shadow-lg"
               style={{ background: "var(--bg)" }}
             >
               ↓ Latest
@@ -413,25 +443,10 @@ export function ChatView({
             </button>
           </form>
 
-          {/* wraps instead of scrolling sideways; on phones only the check-in chip stays (the rest duplicate the suggestions) */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pb-2 pt-1 sm:pb-4 sm:pt-3">
-            <button onClick={onCheckIn} className="chip">
-              Daily check-in
-            </button>
-            {QUICK.map((q) => (
-              <button
-                key={q.label}
-                onClick={() => submit(q.prompt)}
-                className="chip hidden sm:inline-flex"
-              >
-                {q.label}
-              </button>
-            ))}
-          </div>
-          <p className="-mt-2 pb-3 text-center text-[11px] text-[var(--muted)]">
-            {readOnly
-              ? "Read-only mode is on. I can look but not change anything."
-              : "Approve & Act mode: I can propose changes, and nothing happens until you approve."}
+          {syncOpen && <SyncDialog onClose={() => setSyncOpen(false)} onRun={sync} />}
+          {commentOpen && <PrCommentDialog onClose={() => setCommentOpen(false)} onDraft={draftComment} />}
+          <p className="mt-3 pb-5 text-center text-[11px] leading-snug text-[var(--muted)]">
+            Approve &amp; Act: I can propose changes, and nothing happens until you approve.
           </p>
         </div>
       </div>

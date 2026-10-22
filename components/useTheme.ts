@@ -6,7 +6,7 @@ import { useSyncExternalStore } from "react";
 // Auto / Light / Dark menu (all the light-theme styles are still in place).
 export const THEME_SWITCHING = false;
 
-// "auto" follows the mode like the design (Read-only = light, Approval mode = dark).
+// "auto" follows the app default (dark).
 export type ThemePref = "auto" | "light" | "dark";
 const KEY = "theme";
 const listeners = new Set<() => void>();

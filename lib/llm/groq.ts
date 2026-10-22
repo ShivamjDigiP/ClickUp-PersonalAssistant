@@ -58,10 +58,7 @@ export function nullableOptionals(schema: any) {
 export const stripNulls = (args: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(args).filter(([, v]) => v !== null));
 
-export async function generateGroq(model: string, system: string, contents: Message[], tools: Tool[]): Promise<Message> {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) throw new ProviderError("GROQ_API_KEY is not set", 0, Infinity);
-
+export async function generateGroq(key: string, model: string, system: string, contents: Message[], tools: Tool[]): Promise<Message> {
   const body = JSON.stringify({
     model,
     messages: toOpenAI(system, contents),

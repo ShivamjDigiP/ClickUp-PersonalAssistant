@@ -207,7 +207,7 @@ export function ProjectPage({
           </button>
         ) : (
           <Link href="/" className="glass rounded-full px-4 py-2 text-sm">
-            ← Back to Pulse
+            ← Back to Home
           </Link>
         )}
         {mode === "overlay" && onAsk && (
