@@ -157,11 +157,22 @@ export function useChat() {
 
   const decide = useCallback(async (p: Proposal, decision: "approve" | "reject") => {
     setOutcomes((o) => ({ ...o, [p.id]: { state: "working" } }));
-    const out = await fetch("/api/approvals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: p.id, decision }),
-    }).then((r) => r.json());
+    // Never leave the card stuck on "working": a timeout, an HTML error page or a dropped connection becomes a visible message.
+    const out: { ok?: boolean; error?: string } = await (async () => {
+      try {
+        const res = await fetch("/api/approvals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: p.id, decision }),
+          signal: AbortSignal.timeout(55_000),
+        });
+        const data = await res.json().catch(() => null);
+        if (data && typeof data === "object") return data;
+        return { ok: false, error: `The server didn't answer properly (HTTP ${res.status}). Check ClickUp before retrying, then ask again.` };
+      } catch {
+        return { ok: false, error: "Couldn't reach the server. Check your connection and ask again. Nothing was confirmed as changed." };
+      }
+    })();
     const state: Outcome["state"] = out.ok ? "approved" : decision === "reject" ? "rejected" : "error";
     dirty.current = true;
     setOutcomes((o) => ({ ...o, [p.id]: { state, message: out.ok ? undefined : out.error } }));

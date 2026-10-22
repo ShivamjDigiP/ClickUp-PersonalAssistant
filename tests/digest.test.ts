@@ -10,6 +10,7 @@ import { localDate, localParts, safeTz, shouldSend, validHour } from "../lib/pus
 import { buildDigest } from "../lib/push/digest";
 import { deleteDigest, getDigest, listDigests, parseSubscription, saveDigest, tokenOf } from "../lib/push/store";
 import { deliver, runDigests } from "../lib/push/run";
+import { explainPushError } from "../lib/push/clientErrors";
 
 // Thursday 22 Oct 2026, 09:00 in India (UTC+5:30)
 const THU_9AM_IST = new Date("2026-10-22T03:30:00Z");
@@ -159,6 +160,24 @@ describe("the hourly run", () => {
     const out = await deliver(rec, THU_9AM_IST, { build: async () => digest, send: async (s) => (s.endpoint.endsWith("6a") ? "gone" : "sent") });
     expect(out.sent).toBe(1);
     expect((await getDigest("6"))!.subs.map((s) => s.endpoint)).toEqual(["https://push.example/6b"]);
+  });
+});
+
+describe("friendly push errors", () => {
+  const regFailed = new Error("Registration failed - push service error");
+  it("tells Brave users exactly which setting to switch on", () => {
+    expect(explainPushError(regFailed, true)).toMatch(/brave:\/\/settings\/privacy.*Google Services for Push Messaging/);
+  });
+  it("gives other browsers a network hint instead", () => {
+    const m = explainPushError(regFailed, false);
+    expect(m).toMatch(/push service/);
+    expect(m).not.toMatch(/Brave/);
+  });
+  it("recognises bad keys and blocked permission, and passes other messages through", () => {
+    expect(explainPushError(new Error("applicationServerKey is not valid"))).toMatch(/VAPID/);
+    expect(explainPushError(Object.assign(new Error("x"), { name: "NotAllowedError" }))).toMatch(/blocked/i);
+    expect(explainPushError(new Error("Too many changes. Try again later."))).toBe("Too many changes. Try again later.");
+    expect(explainPushError(null)).toMatch(/try again/i);
   });
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { explainPushError } from "@/lib/push/clientErrors";
 
 type Status = {
   configured: boolean;
@@ -89,7 +90,7 @@ export function NotificationSettings() {
       await load();
       say(`Daily digest is on. You'll get it around ${hourLabel(hour)}${weekdaysOnly ? " on weekdays" : ""}.`);
     } catch (e) {
-      say((e as Error).message, "error");
+      say(explainPushError(e, (navigator as unknown as { brave?: unknown }).brave !== undefined), "error");
     } finally {
       setBusy(false);
     }

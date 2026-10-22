@@ -3,6 +3,8 @@ import { runWriteTool } from "@/lib/approval/execute";
 import { audit, getSettings } from "@/lib/store";
 import { withAuth } from "@/lib/auth/guard";
 
+export const maxDuration = 60;
+
 async function handler(req: Request) {
   const { id, decision } = (await req.json()) as { id: string; decision: "approve" | "reject" };
   if (decision !== "approve" && decision !== "reject") {
