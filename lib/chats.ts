@@ -1,4 +1,5 @@
 import { kv } from "./kv";
+import { ns } from "./auth/context";
 
 // Chat sessions, one record each (key "chats/<id>"). Where they live (Redis, files or memory) is decided in ./kv;
 // locally that is one JSON file per session under data/chats.
@@ -17,7 +18,7 @@ export type ChatSession = {
 export type ChatMeta = Pick<ChatSession, "id" | "title" | "createdAt" | "updatedAt"> & { messages: number };
 
 export const validId = (id: unknown): id is string => typeof id === "string" && ID.test(id);
-const key = (id: string) => `chats/${id}`;
+const key = (id: string) => ns(`chats/${id}`); // each signed-in person has their own chats
 
 export async function getChat(id: string): Promise<ChatSession | null> {
   if (!validId(id)) return null;
@@ -31,7 +32,8 @@ export async function getChat(id: string): Promise<ChatSession | null> {
 async function all(): Promise<ChatSession[]> {
   let ids: string[] = [];
   try {
-    ids = (await kv().keys("chats/")).map((k) => k.slice("chats/".length));
+    const base = ns("chats/");
+    ids = (await kv().keys(base)).map((k) => k.slice(base.length));
   } catch {
     return [];
   }

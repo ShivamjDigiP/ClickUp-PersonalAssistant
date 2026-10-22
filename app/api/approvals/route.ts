@@ -1,8 +1,9 @@
 import { resolve } from "@/lib/approval/gate";
 import { runWriteTool } from "@/lib/approval/execute";
 import { audit, getSettings } from "@/lib/store";
+import { withAuth } from "@/lib/auth/guard";
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
   const { id, decision } = (await req.json()) as { id: string; decision: "approve" | "reject" };
   if (decision !== "approve" && decision !== "reject") {
     return Response.json({ ok: false, error: "Bad decision" }, { status: 400 });
@@ -11,3 +12,5 @@ export async function POST(req: Request) {
   const outcome = await resolve(id, decision, { readOnly, run: runWriteTool, audit });
   return Response.json(outcome);
 }
+
+export const POST = withAuth(handler);

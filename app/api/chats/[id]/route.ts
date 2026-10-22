@@ -1,14 +1,20 @@
 import { connection } from "next/server";
 import { deleteChat, getChat } from "@/lib/chats";
+import { withAuth } from "@/lib/auth/guard";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+type Ctx = { params: Promise<{ id: string }> };
+
+async function read(_req: Request, { params }: Ctx) {
   await connection();
   const chat = await getChat((await params).id);
   return chat ? Response.json({ chat }) : Response.json({ error: "Chat not found" }, { status: 404 });
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function remove(_req: Request, { params }: Ctx) {
   await connection();
   await deleteChat((await params).id);
   return Response.json({ ok: true });
 }
+
+export const GET = withAuth(read);
+export const DELETE = withAuth(remove);

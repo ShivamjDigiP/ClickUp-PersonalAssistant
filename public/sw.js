@@ -6,7 +6,7 @@
  *                approvals/writes must always reach the server. Pages (HTML) are never served from cache either,
  *                except the offline fallback.
  */
-const VERSION = "v1";
+const VERSION = "v2"; // bumped: adds push notifications
 const STATIC_CACHE = `static-${VERSION}`;
 const OFFLINE_URL = "/offline";
 const PRECACHE = [OFFLINE_URL, "/pwa-icon/192", "/pwa-icon/512"];
@@ -21,6 +21,44 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== STATIC_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
+  );
+});
+
+// ---- Push notifications (the daily digest) ----
+// The server sends { title, body, url, tag } over an encrypted channel. A visible notification MUST be shown for every
+// push (browsers, especially iOS, stop delivering otherwise), so we always call showNotification.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "ClickUp Assistant", {
+      body: data.body || "",
+      icon: "/pwa-icon/192",
+      badge: "/pwa-icon/192",
+      tag: data.tag || "digest", // same tag = replaces the previous one instead of stacking
+      data: { url: data.url || "/" },
+    }),
+  );
+});
+
+// Tapping the notification opens (or focuses) the app at the page the message points to.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      for (const w of windows) {
+        if ("focus" in w) {
+          if ("navigate" in w) w.navigate(url).catch(() => {});
+          return w.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
   );
 });
 

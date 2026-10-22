@@ -1,11 +1,13 @@
 import { connection } from "next/server";
 import { clickup } from "@/lib/clickup/client";
 import { slimTask } from "@/lib/clickup/data";
+import { withAuth } from "@/lib/auth/guard";
+import { reportError } from "@/lib/observability";
 
 // Read-only: the user's open tasks for the check-in deck, most urgent first.
 export const maxDuration = 30;
 
-export async function GET() {
+async function handler() {
   await connection();
   try {
     const [{ user }, { teams }] = await Promise.all([
@@ -30,6 +32,9 @@ export async function GET() {
       .slice(0, 12);
     return Response.json({ me: user.username, cards });
   } catch (e) {
+    reportError(e, "api/checkin");
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }
+
+export const GET = withAuth(handler);

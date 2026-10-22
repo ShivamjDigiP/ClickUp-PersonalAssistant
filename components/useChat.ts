@@ -14,7 +14,9 @@ export type Bubble = {
 export type Outcome = { state: "working" | "approved" | "rejected" | "error"; message?: string };
 export type ChatMeta = { id: string; title: string; createdAt: string; updatedAt: string; messages: number };
 
-const ACTIVE_KEY = "clickup-assistant:active-chat";
+// What this browser remembers about "which chat was open": a chat id, "none" (the person deliberately started a fresh
+// chat), or nothing (new device, cleared browser or signed out: then we open their latest chat from the server).
+export const ACTIVE_KEY = "clickup-assistant:active-chat";
 const PROPOSAL_TTL_MS = 14 * 60_000; // server drops unapproved proposals after 15 min or a restart
 
 const newId = () => crypto.randomUUID();
@@ -74,7 +76,7 @@ export function useChat() {
     setBubbles([]);
     setOutcomes({});
     setChatId(newId());
-    remember(null);
+    remember("none"); // they chose a fresh chat: don't jump back into an old one on the next visit
   }, []);
 
   const removeChat = useCallback(
@@ -86,15 +88,27 @@ export function useChat() {
     [newChat, refreshChats],
   );
 
-  // On first load: bring back the last open conversation and the session list.
+// On first load: bring back the person's conversations. Chats are saved on the server under their own account, so
+  // this works on any device: open the chat this browser remembers if it is theirs, otherwise their latest one.
   useEffect(() => {
-    refreshChats();
-    let last: string | null = null;
-    try {
-      last = localStorage.getItem(ACTIVE_KEY);
-    } catch {}
-    if (last) openChat(last);
-  }, [refreshChats, openChat]);
+    let cancelled = false;
+    (async () => {
+      let last: string | null = null;
+      try {
+        last = localStorage.getItem(ACTIVE_KEY);
+      } catch {}
+      const data = await fetch("/api/chats").then((r) => r.json()).catch(() => null);
+      const list: ChatMeta[] = data?.chats ?? [];
+      if (cancelled) return;
+      setChats(list);
+      if (last === "none") return; // they started a fresh chat last time
+      const target = list.find((c) => c.id === last) ?? list[0]; // list is newest first
+      if (target) await openChat(target.id);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [openChat]);
 
   // Save after each completed turn / approval, never mid-request.
   useEffect(() => {

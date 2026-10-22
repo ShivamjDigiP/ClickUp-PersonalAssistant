@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { ProjectScreen } from "@/components/project/ProjectScreen";
+import { runAs } from "@/lib/auth/context";
+import { pageAuth } from "@/lib/auth/guard";
 import { findProjectBySlug } from "@/lib/clickup/projects";
 import { fromParams } from "@/lib/projectFilters";
 
@@ -14,18 +16,23 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connection();
   const { project } = await params;
-  const p = await findProjectBySlug(decodeURIComponent(project)).catch(() => null);
+  const auth = await pageAuth().catch(() => null);
+  const p = auth ? await runAs(auth, () => findProjectBySlug(decodeURIComponent(project))).catch(() => null) : null;
   return { title: p ? `${p.name} · ClickUp Assistant` : "ClickUp Assistant" };
 }
 
 async function ProjectContent({ params, searchParams }: Props) {
   await connection();
   const { project } = await params;
-  const p = await findProjectBySlug(decodeURIComponent(project));
-  if (!p) notFound();
-
   const sp = new URLSearchParams();
   for (const [k, v] of Object.entries(await searchParams)) for (const x of Array.isArray(v) ? v : v === undefined ? [] : [v]) sp.append(k, x);
+
+  const auth = await pageAuth();
+  if (!auth) redirect(`/login?next=${encodeURIComponent(`/${project}${sp.size ? `?${sp}` : ""}`)}`);
+
+  // Look the project up as the signed-in person: what exists for you depends on your ClickUp access
+  const p = await runAs(auth, () => findProjectBySlug(decodeURIComponent(project)));
+  if (!p) notFound();
 
   return <ProjectScreen id={p.id} name={p.name} filters={fromParams(sp)} />;
 }
@@ -34,7 +41,7 @@ async function ProjectContent({ params, searchParams }: Props) {
 // The request-specific work lives inside <Suspense> so the shell can be prerendered and the project streams in.
 export default function ProjectRoute(props: Props) {
   return (
-    <Suspense fallback={<div className="grid min-h-screen place-items-center text-sm text-[var(--muted)]">Loading project…</div>}>
+    <Suspense fallback={<div className="grid min-h-dvh place-items-center text-sm text-[var(--muted)]">Loading project…</div>}>
       <ProjectContent {...props} />
     </Suspense>
   );

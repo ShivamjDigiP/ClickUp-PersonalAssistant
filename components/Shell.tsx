@@ -55,6 +55,14 @@ export function Shell() {
       .catch((e) => setProjectsError(e.message));
   }, []);
 
+  // A tapped notification opens the app straight on a tab, e.g. /?tab=me
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (!t || !TABS.some((x) => x.id === t)) return;
+    const id = setTimeout(() => setTab(t as Tab), 0);
+    return () => clearTimeout(id);
+  }, []);
+
   // Dark-only while THEME_SWITCHING is off. When it is on: Auto = Read-only is light, Approval mode is dark; Light/Dark override it.
   const theme: "light" | "dark" = !THEME_SWITCHING ? "dark" : themePref === "auto" ? (readOnly ? "light" : "dark") : themePref;
   useEffect(() => {

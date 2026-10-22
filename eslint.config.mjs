@@ -10,6 +10,11 @@ const eslintConfig = defineConfig([
     files: ["lib/**/*.ts", "app/api/**/*.ts"],
     rules: { "@typescript-eslint/no-explicit-any": "off" },
   },
+  // Tests build small fake objects on purpose, so loose types are fine there.
+  {
+    files: ["tests/**/*.ts"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

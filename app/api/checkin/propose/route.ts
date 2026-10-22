@@ -2,9 +2,10 @@ import { clickup } from "@/lib/clickup/client";
 import { tools } from "@/lib/clickup/tools";
 import { propose } from "@/lib/approval/gate";
 import { audit, getSettings } from "@/lib/store";
+import { withAuth } from "@/lib/auth/guard";
 
 // Turns a check-in swipe into a *proposal* (never executes). The user approves in the review step.
-export async function POST(req: Request) {
+async function handler(req: Request) {
   const { task_id, action, note } = (await req.json()) as {
     task_id: string;
     action: "done" | "blocked" | "note";
@@ -43,3 +44,5 @@ export async function POST(req: Request) {
     return Response.json({ error: (e as Error).message }, { status: 400 });
   }
 }
+
+export const POST = withAuth(handler);

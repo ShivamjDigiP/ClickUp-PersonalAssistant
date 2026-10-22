@@ -20,6 +20,7 @@ export interface KV {
   keys(prefix: string): Promise<string[]>;
   push(key: string, value: unknown, max: number): Promise<void>; // append to a capped list
   list<T>(key: string, n: number): Promise<T[]>; // newest first
+  incr(key: string, ttlSec: number): Promise<number>; // atomic counter that expires (used for rate limits)
 }
 
 const KEY = /^[A-Za-z0-9][A-Za-z0-9/_-]*$/;
@@ -64,6 +65,26 @@ function redis(url: string, token: string): KV {
       await cmd(["LTRIM", NS + safe(k), 0, max - 1]);
     },
     list: async (k, n) => ((await cmd(["LRANGE", NS + safe(k), 0, n - 1])) as string[]).map((s) => JSON.parse(s)),
+    incr: async (k, ttl) => {
+      const n = Number(await cmd(["INCR", NS + safe(k)]));
+      if (n === 1) await cmd(["EXPIRE", NS + safe(k), ttl]); // the window starts at the first hit
+      return n;
+    },
+  };
+}
+
+// Counters are short-lived and only matter per server, so files and memory share one in-memory implementation.
+function counters() {
+  const g = globalThis as unknown as { __kvCounters?: Map<string, { n: number; exp: number }> };
+  const m = (g.__kvCounters ??= new Map());
+  return async (k: string, ttl: number) => {
+    const now = Date.now();
+    const e = m.get(safe(k));
+    if (!e || e.exp < now) {
+      m.set(k, { n: 1, exp: now + ttl * 1000 });
+      return 1;
+    }
+    return ++e.n;
   };
 }
 
@@ -103,6 +124,7 @@ function files(): KV {
     },
     push: async (k, v, max) => set(k, [...((await get<unknown[]>(k)) ?? []), v].slice(-max)),
     list: async <T,>(k: string, n: number) => ((await get<T[]>(k)) ?? []).slice(-n).reverse(),
+    incr: counters(),
   };
 }
 
@@ -131,6 +153,7 @@ function memory(): KV {
     keys: async (prefix) => [...m.kv.keys()].filter((k) => k.startsWith(prefix) && live(k)),
     push: async (k, v, max) => void m.lists.set(safe(k), [JSON.stringify(v), ...(m.lists.get(k) ?? [])].slice(0, max)),
     list: async <T,>(k: string, n: number) => (m.lists.get(k) ?? []).slice(0, n).map((s: string) => JSON.parse(s) as T),
+    incr: counters(),
   };
 }
 

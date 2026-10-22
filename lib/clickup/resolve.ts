@@ -1,4 +1,5 @@
 import { clickup } from "./client";
+import { authKey } from "../auth/context";
 
 // Lets tools accept a name ("Imported from Jira") or an id, so the LLM never has to ask the user for ids.
 export type Hierarchy = {
@@ -19,7 +20,8 @@ export async function defaultTeamId(teamId?: string) {
 
 export async function loadHierarchy(teamId?: string): Promise<Hierarchy> {
   const team = await defaultTeamId(teamId);
-  const hit = cache.get(team);
+  const ck = `${authKey()}:${team}`; // cached per person: what you can see depends on your permissions
+  const hit = cache.get(ck);
   if (hit && Date.now() - hit.at < TTL) return hit.data;
 
   const { spaces } = await clickup<{ spaces: any[] }>(`/team/${team}/space`, { archived: false });
@@ -37,7 +39,7 @@ export async function loadHierarchy(teamId?: string): Promise<Hierarchy> {
       };
     }),
   );
-  cache.set(team, { at: Date.now(), data });
+  cache.set(ck, { at: Date.now(), data });
   return data;
 }
 
@@ -88,12 +90,16 @@ export async function resolveLists(query: string, teamId?: string): Promise<Reso
 
 // Who a question is about. Default is the current user; "team"/"all" means everyone; otherwise a member's name.
 export type Scope = { id: string | null; label: string };
-let me: { id: string; name: string } | null = null;
+const meCache = new Map<string, { id: string; name: string }>(); // per signed-in person
 
 export async function currentUser() {
-  if (me) return me;
+  const k = authKey();
+  const hit = meCache.get(k);
+  if (hit) return hit;
   const { user } = await clickup<{ user: any }>("/user");
-  return (me = { id: String(user.id), name: String(user.username ?? "you") });
+  const me = { id: String(user.id), name: String(user.username ?? "you") };
+  meCache.set(k, me);
+  return me;
 }
 
 export async function resolveScope(scope?: string, teamId?: string): Promise<Scope> {

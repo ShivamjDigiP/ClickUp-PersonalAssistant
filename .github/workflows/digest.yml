@@ -1,0 +1,38 @@
+name: Daily digest
+
+# Wakes the app up once an hour so it can send each person's digest when THEIR chosen hour arrives.
+# (GitHub's scheduler is free and can run hourly; Vercel's free plan only allows one scheduled job per day.)
+# Needs two repository secrets: APP_URL (e.g. https://my-app.vercel.app) and CRON_SECRET (same value as in Vercel).
+# Until both exist this job just skips itself, so it is safe to commit first.
+on:
+  schedule:
+    - cron: "5 * * * *" # five minutes past every hour
+  workflow_dispatch: # also lets you press "Run workflow" by hand to test
+
+permissions: {}
+
+concurrency:
+  group: digest
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: Send due digests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ask the app to send any digests that are due
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "APP_URL / CRON_SECRET are not set yet: skipping."
+            exit 0
+          fi
+          code=$(curl -sS -o response.json -w "%{http_code}" --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" "${APP_URL%/}/api/cron/digest")
+          cat response.json; echo
+          # anything other than 200 turns this run red, and GitHub emails you
+          test "$code" = "200"

@@ -3,6 +3,9 @@ import { clickup } from "@/lib/clickup/client";
 import { summarizeList, type Health } from "@/lib/clickup/data";
 import { engagedLists, myTasks } from "@/lib/clickup/me";
 import { listAllProjects } from "@/lib/clickup/projects";
+import { authKey } from "@/lib/auth/context";
+import { withAuth } from "@/lib/auth/guard";
+import { reportError } from "@/lib/observability";
 
 export type Project = {
   id: string;
@@ -28,14 +31,15 @@ export type PulseData = {
 };
 
 const OTHERS_SHOWN = 8; // besides my projects, this many of the busiest other lists get live health
-let cache: { at: number; data: PulseData } | null = null;
+const cache = new Map<string, { at: number; data: PulseData }>(); // one entry per signed-in person
 
 // Reading many projects from ClickUp can take longer than a host's default function limit (e.g. Vercel's 10s).
 export const maxDuration = 60;
 
-export async function GET() {
+async function handler() {
   await connection();
-  if (cache && Date.now() - cache.at < 60_000) return Response.json(cache.data);
+  const hit = cache.get(authKey());
+  if (hit && Date.now() - hit.at < 60_000) return Response.json(hit.data);
 
   try {
     const [{ user }, { teams }] = await Promise.all([clickup<{ user: any }>("/user"), clickup<{ teams: any[] }>("/team")]);
@@ -124,9 +128,12 @@ export async function GET() {
       counts: { mine: mine.size, accessible: new Set([...accessible.keys(), ...mine.keys()]).size },
       my: { open: open.length, overdue: open.filter((t) => t.due_date && Number(t.due_date) < now).length },
     };
-    cache = { at: Date.now(), data };
+    cache.set(authKey(), { at: Date.now(), data });
     return Response.json(data);
   } catch (e) {
+    reportError(e, "api/pulse");
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }
+
+export const GET = withAuth(handler);

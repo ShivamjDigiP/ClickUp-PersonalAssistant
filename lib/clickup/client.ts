@@ -1,3 +1,5 @@
+import { currentAuth } from "../auth/context";
+
 const BASE = "https://api.clickup.com/api/v2";
 
 type Params = Record<string, string | number | boolean | Array<string | number> | undefined>;
@@ -23,8 +25,11 @@ export async function clickup<T = any>(
   params: Params = {},
   init: { method?: "GET" | "POST" | "PUT"; body?: unknown } = {},
 ): Promise<T> {
-  const token = process.env.CLICKUP_API_TOKEN;
-  if (!token) throw new Error("CLICKUP_API_TOKEN is not set in .env.local");
+  // Whose token? The signed-in person's (set per request by withAuth); in local single-user mode, the one in .env.local.
+  const who = currentAuth();
+  const token = who?.token || process.env.CLICKUP_API_TOKEN;
+  if (!token) throw new Error(who ? "Your ClickUp sign-in has no token. Please sign in again." : "CLICKUP_API_TOKEN is not set in .env.local");
+  const authorization = who?.scheme === "bearer" ? `Bearer ${token}` : token;
 
   const url = new URL(BASE + path);
   for (const [key, value] of Object.entries(params)) {
@@ -40,7 +45,7 @@ export async function clickup<T = any>(
       res = await slot(() =>
         fetch(url, {
           method: init.method ?? "GET",
-          headers: { Authorization: token, "Content-Type": "application/json" },
+          headers: { Authorization: authorization, "Content-Type": "application/json" },
           body: init.body ? JSON.stringify(init.body) : undefined,
           cache: "no-store",
         }),

@@ -1,0 +1,17 @@
+# Opens a pull request when a dependency has a new version, so updates (and security fixes) don't pile up.
+# Each pull request runs the CI checks, so you can see if an update breaks anything before merging it.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # one pull request for all minor/patch updates instead of many small ones
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -4,6 +4,9 @@ import { fetchListTasks } from "@/lib/clickup/data";
 import { isBacklog, isDone } from "@/lib/clickup/me";
 import { listAllProjects } from "@/lib/clickup/projects";
 import type { PTask, Priority, Stage } from "@/lib/projectFilters";
+import { authKey } from "@/lib/auth/context";
+import { withAuth } from "@/lib/auth/guard";
+import { reportError } from "@/lib/observability";
 
 export type ProjectTasks = {
   project: { id: string; name: string; space: string; folder: string | null; slug: string };
@@ -18,10 +21,11 @@ const cache = new Map<string, { at: number; data: ProjectTasks }>();
 // Read-only: every task of one project, slimmed down so the browser can filter and chart it instantly.
 export const maxDuration = 60; // big projects load up to 1000 tasks
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
-  const hit = cache.get(id);
+  const ck = `${authKey()}:${id}`; // per person: what you may see in a list depends on your permissions
+  const hit = cache.get(ck);
   if (hit && Date.now() - hit.at < 30_000) return Response.json(hit.data);
 
   try {
@@ -62,9 +66,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       tasks,
       truncated: raw.length >= MAX_PAGES * 100,
     };
-    cache.set(id, { at: Date.now(), data });
+    cache.set(ck, { at: Date.now(), data });
     return Response.json(data);
   } catch (e) {
+    reportError(e, "api/project/tasks");
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 }
+
+export const GET = withAuth(handler);

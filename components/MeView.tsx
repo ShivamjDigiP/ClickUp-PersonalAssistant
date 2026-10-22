@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AccountFooter } from "./AccountFooter";
+import { NotificationSettings } from "./NotificationSettings";
 import { motion } from "motion/react";
 import { Bars, Donut } from "./Charts";
 import { ColumnChart, Heatmap, Kpi, Skeleton, StageBar } from "./MeCharts";
@@ -282,12 +284,17 @@ export function MeView({
         </Section>
       </div>
 
+      <NotificationSettings />
+
       {/* Support link: shows the phone's real screen measurements (used to fix layout problems on a specific device) */}
-      <p className="pt-2 text-center text-xs">
-        <Link href="/debug-viewport" className="text-[var(--muted)] underline underline-offset-2">
-          Screen check
-        </Link>
-      </p>
+      <div className="space-y-2 pt-2">
+        <AccountFooter />
+        <p className="text-center text-xs">
+          <Link href="/debug-viewport" className="text-[var(--muted)] underline underline-offset-2">
+            Screen check
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

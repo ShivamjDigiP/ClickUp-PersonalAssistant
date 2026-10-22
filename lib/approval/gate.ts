@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type { AuditEntry } from "../store";
 import { kv } from "../kv";
+import { ns } from "../auth/context";
 
 // The approval gate. The LLM can only call propose(); nothing executes until
 // resolve(id, "approve") is called by the user-facing API, and never in read-only mode.
@@ -16,7 +17,7 @@ export type Pending = {
 };
 
 export const TTL_MS = 15 * 60_000;
-const key = (id: string) => `pending/${id}`;
+const key = (id: string) => ns(`pending/${id}`); // per person: nobody can approve someone else's proposal
 
 export async function propose(tool: string, args: unknown, summary: string, details?: string): Promise<Pending> {
   const p: Pending = { id: randomUUID(), tool, args, summary, details, createdAt: Date.now() };

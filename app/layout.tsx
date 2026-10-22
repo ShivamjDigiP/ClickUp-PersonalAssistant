@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthWatcher } from "@/components/AuthWatcher";
 import { PwaRegister } from "@/components/PwaRegister";
 import { Splash } from "@/components/Splash";
 import { SPLASHES, splashHref, splashMedia } from "@/lib/splash";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
         <Splash />
+        <AuthWatcher />
         <PwaRegister />
       </body>
     </html>
