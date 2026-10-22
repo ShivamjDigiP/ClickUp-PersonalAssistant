@@ -202,6 +202,19 @@ body {
     touch-action: manipulation; /* no 300ms double-tap delay */
   }
 }
+/* Full-screen layers (project page, check-in, drawers). `inset: 0` alone stops short of the bottom edge on iPhones
+   (it follows the "visible" height); 100lvh is the full screen height, so these reach under the home indicator.
+   Content inside adds its own env(safe-area-inset-*) padding. */
+.fill-screen {
+  inset: 0;
+  height: 100vh; /* fallback for browsers without lvh */
+  height: 100lvh;
+}
+html,
+body {
+  background-color: #060a18; /* same as the splash/launch colour: nothing can flash white or mismatch at the edges */
+}
+
 /* Swipeable rows: no visible scrollbar */
 .no-scrollbar {
   scrollbar-width: none;

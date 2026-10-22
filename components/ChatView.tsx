@@ -268,11 +268,11 @@ export function ChatView({
       </aside>
       {drawer && (
         <div
-          className="fixed inset-0 z-40 md:hidden"
+          className="fixed fill-screen z-40 md:hidden"
           onClick={() => setDrawer(false)}
         >
           <div
-            className="absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-[rgb(var(--tint)/0.1)]"
+            className="absolute inset-y-0 left-0 w-72 max-w-[85%] border-r border-[rgb(var(--tint)/0.1)] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]"
             style={{ background: "var(--bg)" }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const tool = tools.find((t) => t.name === toolName)!;
     const parsed = tool.schema!.parse(args);
     const { summary, details } = await tool.preview!(parsed);
-    const p = propose(toolName, parsed, summary, details);
+    const p = await propose(toolName, parsed, summary, details);
     await audit({ event: "proposed", tool: toolName, summary, detail: details });
     return Response.json({ proposal: p });
   } catch (e) {

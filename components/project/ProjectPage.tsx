@@ -199,7 +199,7 @@ export function ProjectPage({
   const reach = useMemo(() => (typeof window === "undefined" ? 2000 : Math.hypot(window.innerWidth, window.innerHeight) + 40), []);
 
   const body = (
-    <div className="mx-auto max-w-6xl px-4 pb-8 pt-3 sm:px-8 sm:pb-16 sm:pt-6">
+    <div className="mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-8 sm:pb-16 sm:pt-6">
       <div className="flex items-center justify-between gap-3">
         {mode === "overlay" ? (
           <button onClick={onClose} className="glass rounded-full px-4 py-2 text-sm">
@@ -346,7 +346,7 @@ export function ProjectPage({
     </div>
   );
 
-  if (mode === "page") return <div className="min-h-screen">{body}</div>;
+  if (mode === "page") return <div className="min-h-dvh">{body}</div>;
 
   const at = `${origin?.x ?? 0}px ${origin?.y ?? 0}px`;
   return (
@@ -362,7 +362,7 @@ export function ProjectPage({
       <motion.div
         role="dialog"
         aria-label={`${name} details`}
-        className="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden"
+        className="fixed fill-screen z-40 overflow-y-auto overflow-x-hidden"
         style={{
           background: "var(--bg)",
           backgroundImage: `radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, ${color} 20%, transparent), transparent 60%), radial-gradient(900px 500px at 100% 110%, var(--g1), transparent 60%)`,

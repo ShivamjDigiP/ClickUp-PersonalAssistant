@@ -20,8 +20,14 @@ export async function GET() {
   return Response.json({ ...(await getSettings()), name: await name() });
 }
 
+// Always answers with JSON (also on failure) so the page can show a real message instead of choking on an empty body.
 export async function POST(req: Request) {
-  const { readOnly } = (await req.json()) as { readOnly: boolean };
-  await setSettings({ readOnly: !!readOnly });
-  return Response.json(await getSettings());
+  try {
+    const { readOnly } = (await req.json()) as { readOnly: boolean };
+    await setSettings({ readOnly: !!readOnly });
+    return Response.json(await getSettings());
+  } catch (e) {
+    console.error("[settings] could not save:", (e as Error).message);
+    return Response.json({ error: `Could not save the setting (${(e as Error).message}).` }, { status: 500 });
+  }
 }

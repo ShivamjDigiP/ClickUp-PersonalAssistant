@@ -1,28 +1,20 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { kv } from "./kv";
 
-// Tiny JSON-file persistence for the local POC/MVP (data/ is git-ignored).
-// In the AWS phase this file is the only thing swapped for DynamoDB.
-const DIR = path.join(process.cwd(), "data");
-
-async function read<T>(file: string, fallback: T): Promise<T> {
-  try {
-    return JSON.parse(await fs.readFile(path.join(DIR, file), "utf8")) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-async function write(file: string, value: unknown) {
-  await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(path.join(DIR, file), JSON.stringify(value, null, 2));
-}
-
+// Settings and the audit log. Where they live (Redis, files or memory) is decided in ./kv.
 export type Settings = { readOnly: boolean };
 
-// Safe default: read-only until the user switches writes on.
-export const getSettings = () => read<Settings>("settings.json", { readOnly: true });
-export const setSettings = (s: Settings) => write("settings.json", s);
+// Safe default: read-only until the user switches writes on. If storage is unreachable we also fall back to
+// read-only (never to "writes allowed").
+export async function getSettings(): Promise<Settings> {
+  try {
+    const s = await kv().get<Settings>("settings");
+    return typeof s?.readOnly === "boolean" ? s : { readOnly: true };
+  } catch (e) {
+    console.error("[settings] could not read, assuming read-only:", (e as Error).message);
+    return { readOnly: true };
+  }
+}
+export const setSettings = (s: Settings) => kv().set("settings", s);
 
 export type AuditEntry = {
   at: string;
@@ -33,9 +25,18 @@ export type AuditEntry = {
 };
 
 export async function audit(entry: Omit<AuditEntry, "at">) {
-  const log = await read<AuditEntry[]>("audit.json", []);
-  log.push({ at: new Date().toISOString(), ...entry });
-  await write("audit.json", log.slice(-500));
+  try {
+    await kv().push("audit", { at: new Date().toISOString(), ...entry }, 500);
+  } catch (e) {
+    // A failed log write must never block or fail the action itself
+    console.error("[audit] could not write:", (e as Error).message);
+  }
 }
 
-export const readAudit = async (limit = 50) => (await read<AuditEntry[]>("audit.json", [])).slice(-limit).reverse();
+export const readAudit = async (limit = 50): Promise<AuditEntry[]> => {
+  try {
+    return await kv().list<AuditEntry>("audit", limit);
+  } catch {
+    return [];
+  }
+};

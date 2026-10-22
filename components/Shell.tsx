@@ -76,8 +76,9 @@ export function Shell() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ readOnly: next }),
       });
-      const s = await res.json();
-      if (!res.ok || typeof s.readOnly !== "boolean") throw new Error(s.error ?? "Could not save");
+      // read the body defensively: a server crash can return an empty or non-JSON body
+      const s = await res.json().catch(() => ({}) as { readOnly?: boolean; error?: string });
+      if (!res.ok || typeof s.readOnly !== "boolean") throw new Error(s.error ?? `The server could not save this (HTTP ${res.status}).`);
       setReadOnly(s.readOnly);
       if (s.readOnly) notify("Read-only is on. Nothing can be changed.");
       else {
@@ -221,7 +222,7 @@ export function Shell() {
       {/* Mode feedback: soft edge glow while read-only, amber sweep when writes turn on */}
       <div
         aria-hidden
-        className={`pointer-events-none fixed inset-0 z-30 transition-opacity duration-500 ${readOnly ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none fixed fill-screen z-30 transition-opacity duration-500 ${readOnly ? "opacity-100" : "opacity-0"}`}
         style={{ boxShadow: "inset 0 0 90px rgba(130,150,255,.14)" }}
       />
       <AnimatePresence>

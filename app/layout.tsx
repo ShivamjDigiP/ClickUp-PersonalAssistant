@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/PwaRegister";
+import { Splash } from "@/components/Splash";
+import { SPLASHES, splashHref, splashMedia } from "@/lib/splash";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +19,13 @@ export const metadata: Metadata = {
   title: "ClickUp Assistant",
   description: "Your ClickUp work in one pulse.",
   applicationName: "ClickUp Assistant",
-  // iOS: lets "Add to Home Screen" open it full-screen like an app
-  appleWebApp: { capable: true, title: "ClickUp AI", statusBarStyle: "black-translucent" },
+  // iOS: lets "Add to Home Screen" open it full-screen like an app, with a launch image instead of a blank screen
+  appleWebApp: {
+    capable: true,
+    title: "ClickUp AI",
+    statusBarStyle: "black-translucent",
+    startupImage: SPLASHES.map((s) => ({ url: splashHref(s), media: splashMedia(s) })),
+  },
   icons: { apple: "/pwa-icon/apple-180" },
   formatDetection: { telephone: false },
 };
@@ -41,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
+        <Splash />
         <PwaRegister />
       </body>
     </html>

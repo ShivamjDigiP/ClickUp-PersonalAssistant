@@ -79,7 +79,7 @@ export function CheckInDeck({ readOnly, onClose }: { readOnly: boolean; onClose:
 
   return (
     <motion.div
-      className="fixed inset-0 z-40 grid place-items-center bg-[var(--overlay)] p-4 backdrop-blur-md"
+      className="fixed fill-screen z-40 grid place-items-center bg-[var(--overlay)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-md"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

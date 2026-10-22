@@ -62,7 +62,7 @@ export async function POST(req: Request) {
             } else if (tool.kind === "write") {
               const parsed = tool.schema ? tool.schema.parse(args ?? {}) : args;
               const { summary, details } = await tool.preview!(parsed);
-              const p = propose(tool.name, parsed, summary, details);
+              const p = await propose(tool.name, parsed, summary, details);
               proposals.push(p);
               await audit({ event: "proposed", tool: tool.name, summary, detail: details });
               response = { status: "pending_user_approval", note: "Not executed yet. Tell the user it awaits their approval." };
