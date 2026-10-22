@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "node --use-system-ca node_modules/next/dist/bin/next start -p 3010",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm test"
   },

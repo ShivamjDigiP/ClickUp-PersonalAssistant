@@ -7,6 +7,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # MAJOR versions can change how things work (e.g. TypeScript 5 -> 7, ESLint 9 -> 10, @types/node must also match the
+    # Node version we run), so they are never proposed automatically. Do those by hand, on purpose, one at a time.
+    # Minor and patch updates (including security fixes) still arrive.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       # one pull request for all minor/patch updates instead of many small ones
       minor-and-patch:
