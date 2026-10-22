@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Row = [string, string];
@@ -38,8 +39,11 @@ export function ViewportProbe() {
 
   return (
     <main className="px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] text-sm">
+      <Link href="/" className="mb-3 inline-block text-xs text-[var(--muted)] underline underline-offset-2">
+        ← Back to the app
+      </Link>
       <h1 className="mb-1 text-xl font-light">Viewport check</h1>
-      <p className="mb-4 text-xs text-[var(--muted)]">Screenshot this page and send it over.</p>
+      <p className="mb-4 text-xs text-[var(--muted)]">Take a screenshot of this page and send it over.</p>
       <dl className="space-y-2">
         {rows.map(([k, v]) => (
           <div key={k} className="flex justify-between gap-4 border-b border-white/10 pb-2">

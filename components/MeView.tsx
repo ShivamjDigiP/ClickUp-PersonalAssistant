@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion } from "motion/react";
 import { Bars, Donut } from "./Charts";
 import { ColumnChart, Heatmap, Kpi, Skeleton, StageBar } from "./MeCharts";
@@ -281,6 +282,12 @@ export function MeView({
         </Section>
       </div>
 
+      {/* Support link: shows the phone's real screen measurements (used to fix layout problems on a specific device) */}
+      <p className="pt-2 text-center text-xs">
+        <Link href="/debug-viewport" className="text-[var(--muted)] underline underline-offset-2">
+          Screen check
+        </Link>
+      </p>
     </div>
   );
 }
