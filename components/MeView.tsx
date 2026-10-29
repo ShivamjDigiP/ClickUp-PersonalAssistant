@@ -27,6 +27,13 @@ function Section({ title, hint, children, className = "" }: { title: string; hin
 
 const weekLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
+// "Task A, Task B +3 more": short, so the card stays one line
+const taskSub = (tasks: { name: string }[], count: number, none: string) =>
+  count === 0
+    ? none
+    : tasks.slice(0, 2).map((t) => (t.name.length > 28 ? `${t.name.slice(0, 27)}…` : t.name)).join(", ") +
+      (count > 2 ? ` +${count - 2} more` : "");
+
 export function MeView({
   projects,
   onAsk,
@@ -138,17 +145,18 @@ export function MeView({
           badge={delta === 0 ? null : { text: `${delta > 0 ? "+" : ""}${delta}`, good: delta > 0 }}
         />
         <Kpi
-          label="Impact points"
-          value={impact.points}
-          sub="urgent ×4 · high ×3 · normal ×2 · low ×1"
+          label="In review"
+          value={data.review.count}
+          sub={taskSub(data.review.tasks, data.review.count, "Nothing waiting for review")}
           accent="var(--amber)"
-          hint="Each completed task in the period earns points by its priority. It rewards finishing important work, not just lots of work."
+          hint={data.review.tasks.map((t) => `${t.name} (${t.list ?? ""})`).join("\n") || undefined}
         />
         <Kpi
-          label="Needs attention"
-          value={totals.overdueOpen}
-          sub={`${totals.dueSoon} more due in 7 days`}
-          accent={totals.overdueOpen ? "var(--coral)" : "var(--teal)"}
+          label="In development"
+          value={data.development.count}
+          sub={taskSub(data.development.tasks, data.development.count, "Nothing in development")}
+          accent="var(--violet)"
+          hint={data.development.tasks.map((t) => `${t.name} (${t.list ?? ""})`).join("\n") || undefined}
         />
       </div>
 

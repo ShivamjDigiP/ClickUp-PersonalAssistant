@@ -1,4 +1,5 @@
 "use client";
+import { BRAND } from "@/lib/brand";
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -118,7 +119,7 @@ export function Shell() {
       >
         <div className="flex min-w-0 items-center gap-3">
           <Orb size={32} thinking={chat.busy} pulseKey={chat.pulseKey} />
-          <span className="truncate text-sm font-medium max-[420px]:hidden md:max-lg:hidden">ClickUp Assistant</span>
+          <span className="truncate text-sm font-medium max-[420px]:hidden md:max-lg:hidden">{BRAND.name}</span>
         </div>
 
         <nav className="glass hidden gap-1 rounded-full p-1 text-sm md:flex" aria-label="Sections">
@@ -143,7 +144,7 @@ export function Shell() {
             <button
               onClick={install}
               aria-label="Install app"
-              title="Install ClickUp Assistant on this device"
+              title={`Install ${BRAND.name} on this device`}
               className="glass flex h-10 items-center gap-2 rounded-full px-3 text-xs"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

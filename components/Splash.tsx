@@ -1,4 +1,5 @@
 "use client";
+import { BRAND } from "@/lib/brand";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -37,7 +38,7 @@ export function Splash() {
         <motion.div
           key="splash"
           role="status"
-          aria-label="Loading ClickUp Assistant"
+          aria-label={`Loading ${BRAND.name}`}
           className="fixed fill-screen z-[100] flex flex-col items-center justify-center"
           style={{ background: "#060a18", backgroundImage: "radial-gradient(circle at 50% 38%, rgba(95,80,255,0.38), rgba(6,10,24,0) 55%)" }}
           initial={{ opacity: 1 }}
@@ -71,7 +72,7 @@ export function Splash() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45, duration: 0.6 }}
           >
-            ClickUp Assistant
+            {BRAND.name}
           </motion.h1>
           <motion.p
             className="mt-2 text-sm text-[#8b93b8]"

@@ -1,4 +1,4 @@
-/* ClickUp Assistant service worker.
+/* Orbit service worker. (Name matches lib/brand.ts: this static file cannot import it.)
  *
  * What it does:  makes the app installable, loads the static app files fast, and shows a friendly
  *                offline page when there is no connection.
@@ -35,7 +35,7 @@ self.addEventListener("push", (event) => {
     data = { body: event.data ? event.data.text() : "" };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || "ClickUp Assistant", {
+    self.registration.showNotification(data.title || "Orbit", {
       body: data.body || "",
       icon: "/pwa-icon/192",
       badge: "/pwa-icon/192",

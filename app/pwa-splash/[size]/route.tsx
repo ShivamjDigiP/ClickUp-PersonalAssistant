@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { SPLASHES } from "@/lib/splash";
+import { BRAND } from "@/lib/brand";
 
 // iOS launch images, drawn at build time. Same look as the in-app splash (dark, glowing orb, name),
 // so the hand-over from "launching" to "app" is seamless.
@@ -40,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ size: s
             boxShadow: `0 0 ${Math.round(orb * 0.5)}px rgba(139,123,255,0.55)`,
           }}
         />
-        <div style={{ marginTop: Math.round(w * 0.1), fontSize: Math.round(w * 0.055), color: "#e8ecff", letterSpacing: 1, display: "flex" }}>ClickUp Assistant</div>
+        <div style={{ marginTop: Math.round(w * 0.1), fontSize: Math.round(w * 0.055), color: "#e8ecff", letterSpacing: 1, display: "flex" }}>{BRAND.name}</div>
         <div style={{ marginTop: Math.round(w * 0.02), fontSize: Math.round(w * 0.03), color: "#8b93b8", display: "flex" }}>Your work in one pulse.</div>
       </div>
     ),

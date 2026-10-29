@@ -12,7 +12,7 @@ export function AuthWatcher() {
       if (res.status === 401) {
         const input = args[0];
         const url = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
-        const isApi = url.startsWith("/api/") && !url.startsWith("/api/auth/");
+        const isApi = url.startsWith("/api/") && !url.startsWith("/api/auth/") && !url.startsWith("/api/cxo/") && !url.startsWith("/api/platform/"); // platform screens handle their own sign-in
         if (isApi && !window.location.pathname.startsWith("/login")) {
           // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.href = `/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;

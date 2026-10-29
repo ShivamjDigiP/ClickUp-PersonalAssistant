@@ -20,6 +20,9 @@ export type MeStats = {
   }[];
   totals: { assigned: number; open: number; done: number; completionRate: number; overdueOpen: number; dueSoon: number };
   stages: { backlog: number; inProgress: number; done: number };
+  // my open tasks sitting in review / in development (status names matched loosely)
+  review: { count: number; tasks: SlimTask[] };
+  development: { count: number; tasks: SlimTask[] };
   openByStatus: { label: string; value: number }[];
   backlog: (SlimTask & { ageDays: number; path: string })[];
   projectCount: number;
@@ -46,6 +49,9 @@ export type MeStats = {
 
 export const isDone = (t: any) => t.status?.type === "closed" || t.status?.type === "done";
 const BACKLOG = /backlog|to ?do|open|new|not started|queued|icebox|triage/i;
+export const isReview = (t: any) => !isDone(t) && /review|qa\b|testing|verif/i.test(t.status?.status ?? "");
+export const isDevelopment = (t: any) =>
+  !isDone(t) && !isReview(t) && /develop|in progress|doing|wip|coding/i.test(t.status?.status ?? "");
 export const isBacklog = (t: any) => !isDone(t) && (t.status?.type === "open" || BACKLOG.test(t.status?.status ?? ""));
 const completedAt = (t: any): number | null =>
   isDone(t) ? Number(t.date_done ?? t.date_closed ?? t.date_updated) || null : null;
@@ -138,6 +144,8 @@ export async function computeMe(days = 30): Promise<MeStats> {
   const open = tasks.filter((t) => !isDone(t));
   const done = tasks.filter(isDone);
   const backlogTasks = open.filter(isBacklog);
+  const reviewTasks = open.filter(isReview);
+  const devTasks = open.filter(isDevelopment);
   const overdueOpen = open.filter((t) => t.due_date && Number(t.due_date) < now).length;
   const dueSoon = open.filter((t) => t.due_date && Number(t.due_date) >= now && Number(t.due_date) < now + 7 * DAY).length;
 
@@ -290,6 +298,8 @@ export async function computeMe(days = 30): Promise<MeStats> {
       dueSoon,
     },
     stages: { backlog: backlogTasks.length, inProgress: open.length - backlogTasks.length, done: done.length },
+    review: { count: reviewTasks.length, tasks: reviewTasks.slice(0, 10).map(slimTask) },
+    development: { count: devTasks.length, tasks: devTasks.slice(0, 10).map(slimTask) },
     openByStatus,
     backlog,
     projectCount: allProjects.length,

@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { BRAND } from "@/lib/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "ClickUp Assistant",
-    short_name: "ClickUp AI",
-    description: "Your ClickUp work in one pulse: progress, projects and approvals in one place.",
+    name: BRAND.name,
+    short_name: BRAND.short,
+    description: BRAND.tagline,
     start_url: "/",
     scope: "/",
     display: "standalone",
