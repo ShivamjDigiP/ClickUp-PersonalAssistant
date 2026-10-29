@@ -3,6 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  allowedDevOrigins: ["*.trycloudflare.com"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

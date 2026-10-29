@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { BRAND } from "@/lib/brand";
 import { ProjectScreen } from "@/components/project/ProjectScreen";
 import { runAs } from "@/lib/auth/context";
 import { pageAuth } from "@/lib/auth/guard";
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { project } = await params;
   const auth = await pageAuth().catch(() => null);
   const p = auth ? await runAs(auth, () => findProjectBySlug(decodeURIComponent(project))).catch(() => null) : null;
-  return { title: p ? `${p.name} · ClickUp Assistant` : "ClickUp Assistant" };
+  return { title: p ? `${p.name} · ${BRAND.name}` : BRAND.name };
 }
 
 async function ProjectContent({ params, searchParams }: Props) {
